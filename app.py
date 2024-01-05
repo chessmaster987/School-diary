@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, session, render_template, request, redirect, url_for, flash
 import psycopg2  # pip install psycopg2
 import psycopg2.extras
 
@@ -30,11 +30,22 @@ def login():
             # conn.close()
             # return redirect('/home')
             # return redirect('/profile')
+            session['logged_in'] = True
+            # assuming the username is in your login table
+            session['username'] = username
+            flash(f'Logged in as {session["username"]}')
             return redirect('/crud')
         else:
             return 'Неправильний логін або пароль'
 
     return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    # удалить из сессии имя пользователя, если оно там есть
+    session.pop('username', None)
+    return redirect(url_for('login'))
 
 
 @app.route('/crud')
