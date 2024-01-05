@@ -24,10 +24,10 @@ def login():
         cur.execute(
             "SELECT * FROM login WHERE login_text = %s AND passwd_text = %s", (username, password))
         rows = cur.fetchall()
-        conn.close()
+        # conn.close()
 
         if len(rows) > 0:
-            conn.close()
+            # conn.close()
             # return redirect('/home')
             # return redirect('/profile')
             return redirect('/crud')
