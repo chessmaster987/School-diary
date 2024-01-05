@@ -3,7 +3,7 @@ import psycopg2  # pip install psycopg2
 import psycopg2.extras
 
 app = Flask(__name__)
-app.secret_key = ""
+app.secret_key = "vlad"
 
 DB_HOST = "localhost"
 DB_NAME = "Login_test_DB"
@@ -89,6 +89,16 @@ def update_student(id):
         flash('Student Updated Successfully')
         conn.commit()
         return redirect(url_for('Index'))
+
+
+@app.route('/delete/<string:id>', methods=['POST', 'GET'])
+def delete_student(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute('DELETE FROM students WHERE id = {0}'.format(id))
+    conn.commit()
+    flash('Student Removed Successfully')
+    return redirect(url_for('Index'))
 
 
 if __name__ == "__main__":
