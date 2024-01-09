@@ -13,8 +13,12 @@ DB_PASS = "25082003"
 conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
                         password=DB_PASS, host=DB_HOST)
 
+@app.route("/")
+def main():
+    return render_template('main.html')
 
-@app.route('/', methods=['GET', 'POST'])
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['login_text']
