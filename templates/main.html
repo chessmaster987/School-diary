@@ -106,12 +106,12 @@
                            <div class="row">
                               <div class="col-md-12">
                                  <b>Дані користувача</b>
-                                 <form class="form" role="form" method="post" accept-charset="UTF-8"
+                                 <form class="form" role="form" method="post" action="/main" accept-charset="UTF-8"
                                     id="userInfoButton">
                                     <!-- Кнопка для відкриття веб-сторінки із інформацією про користувача + LOG OUT-->
                                     <div class="form-group">
-                                       <button class="btn btn-primary btn-block">Інформація про користувача</button>
-                                       <button type="submit" class="btn btn-primary btn-block" href="{{ url_for('logout') }}">Log out</button>
+                                       <button type="submit" name="action" class="btn btn-primary btn-block" value="crud">Інформація про користувача</button>
+                                       <button type="submit" name="action" class="btn btn-primary btn-block" value="logout">Log out</button>
                                     </div>
                                  </form>
                               </div>

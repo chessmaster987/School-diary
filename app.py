@@ -16,7 +16,11 @@ conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
 @app.route("/main", methods=['GET', 'POST'])
 def main():
     if request.method == 'POST':
-        return redirect('/crud')
+        action = request.form.get('action')
+        if action == 'crud':
+            return redirect('/crud')
+        elif action == 'logout':
+            return redirect('/logout')
     
     return render_template('main.html')
 
@@ -40,7 +44,7 @@ def login():
             session['logged_in'] = True
             # assuming the username is in your login table
             session['username'] = username
-            #flash(f'Logged in as {session["username"]}')
+            flash(f'Logged in as {session["username"]}')
             return redirect('/main')
         else:
             return 'Неправильний логін або пароль'
@@ -50,7 +54,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    if request.method == 'POST':
+    if request.method == 'GET':
         # Ваш код для виходу
         # ...
         return redirect(url_for('login'))  # Переадресація на сторінку login
