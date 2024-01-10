@@ -13,12 +13,15 @@ DB_PASS = "25082003"
 conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
                         password=DB_PASS, host=DB_HOST)
 
-@app.route("/")
+@app.route("/main", methods=['GET', 'POST'])
 def main():
+    if request.method == 'POST':
+        return redirect('/crud')
+    
     return render_template('main.html')
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['login_text']
@@ -37,8 +40,8 @@ def login():
             session['logged_in'] = True
             # assuming the username is in your login table
             session['username'] = username
-            flash(f'Logged in as {session["username"]}')
-            return redirect('/crud')
+            #flash(f'Logged in as {session["username"]}')
+            return redirect('/main')
         else:
             return 'Неправильний логін або пароль'
 
@@ -47,9 +50,14 @@ def login():
 
 @app.route('/logout')
 def logout():
+    if request.method == 'POST':
+        # Ваш код для виходу
+        # ...
+        return redirect(url_for('login'))  # Переадресація на сторінку login
+    
     # удалить из сессии имя пользователя, если оно там есть
-    session.pop('username', None)
-    return redirect(url_for('login'))
+    #session.pop('username', None)
+    #return redirect(url_for('login'))
 
 
 @app.route('/crud')
