@@ -6,12 +6,13 @@ app = Flask(__name__)
 app.secret_key = "vlad"
 
 DB_HOST = "localhost"
-DB_NAME = "Login_test_DB"
+DB_NAME = "Bazu Danych"
 DB_USER = "postgres"
 DB_PASS = "25082003"
 
 conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
                         password=DB_PASS, host=DB_HOST)
+
 
 @app.route("/main", methods=['GET', 'POST'])
 def main():
@@ -21,19 +22,19 @@ def main():
             return redirect('/crud')
         elif action == 'logout':
             return redirect('/logout')
-    
+
     return render_template('main.html')
 
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['login_text']
-        password = request.form['passwd_text']
+        username = request.form['username']
+        password = request.form['password']
 
         cur = conn.cursor()
         cur.execute(
-            "SELECT * FROM login WHERE login_text = %s AND passwd_text = %s", (username, password))
+            "SELECT * FROM login WHERE username = %s AND password = %s", (username, password))
         rows = cur.fetchall()
         # conn.close()
 
@@ -58,21 +59,24 @@ def logout():
         # Ваш код для виходу
         # ...
         return redirect(url_for('login'))  # Переадресація на сторінку login
-    
+
     # удалить из сессии имя пользователя, если оно там есть
-    #session.pop('username', None)
-    #return redirect(url_for('login'))
+    # session.pop('username', None)
+    # return redirect(url_for('login'))
 
 
 @app.route('/crud')
 def Index():
+    # if 'logged_in' in session:
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    s = "SELECT * FROM students"
+    s = "SELECT * FROM student"
     cur.execute(s)  # Execute the SQL
     list_users = cur.fetchall()
     return render_template('index.html', list_users=list_users)
+    # else:
+    # return redirect(url_for('login'))
 
-
+# ПЕРЕДЕЛАТЬ!!!
 @app.route('/add_student', methods=['POST'])
 def add_student():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -87,11 +91,18 @@ def add_student():
         return redirect(url_for('Index'))
 
 
+# @app.route('/info', methods=['GET'])
+# def infO():
+#    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+#    cur.execute(
+#        "SELECT * FROM student")
+#    conn.commit()
+
 @app.route('/edit/<id>', methods=['POST', 'GET'])
 def get_employee(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    cur.execute('SELECT * FROM students WHERE id = %s', (id))
+    cur.execute('SELECT * FROM students WHERE id = %s', (id,))
     data = cur.fetchall()
     cur.close()
     print(data[0])
