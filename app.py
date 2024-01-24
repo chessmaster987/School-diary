@@ -38,15 +38,20 @@ def login():
         rows = cur.fetchall()
         # conn.close()
 
-        if len(rows) > 0:
-            # conn.close()
-            # return redirect('/home')
-            # return redirect('/profile')
-            session['logged_in'] = True
+        cur.execute("SELECT role FROM login WHERE username = %s", (username,))
+        role = cur.fetchone()
+
+        if role and role[0] == 'admin':
+            return render_template('admin/admin.html')
+        elif role and role[0] == 'teacher':
+            return render_template('teacher/teacher.html')
+        elif role and role[0] == 'student':
+            return render_template('student/student.html')
+        # if len(rows) > 0:
             # assuming the username is in your login table
-            session['username'] = username
-            flash(f'Logged in as {session["username"]}')
-            return redirect('/main')
+            # session['username'] = username
+            # flash(f'Logged in as {session["username"]}')
+            # return redirect('/main')
         else:
             return 'Неправильний логін або пароль'
 
@@ -56,7 +61,7 @@ def login():
 @app.route('/logout')
 def logout():
     if request.method == 'GET':
-        # Ваш код для виходу
+        # Код для виходу
         # ...
         return redirect(url_for('login'))  # Переадресація на сторінку login
 
@@ -77,6 +82,8 @@ def Index():
     # return redirect(url_for('login'))
 
 # ПЕРЕДЕЛАТЬ!!!
+
+
 @app.route('/add_student', methods=['POST'])
 def add_student():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
