@@ -42,11 +42,15 @@ def login():
         role = cur.fetchone()
 
         if role and role[0] == 'admin':
-            return render_template('admin/admin.html')
+            session['username'] = username
+            return redirect('/admin')
         elif role and role[0] == 'teacher':
-            return render_template('teacher/teacher.html')
+            session['username'] = username
+            return redirect('/teacher')
         elif role and role[0] == 'student':
-            return render_template('student/student.html')
+            session['username'] = username
+            print(session['username'])
+            return redirect('/student')
         # if len(rows) > 0:
             # assuming the username is in your login table
             # session['username'] = username
@@ -57,6 +61,22 @@ def login():
 
     return render_template('login.html')
 
+
+@app.route('/admin', methods=['GET'])
+def admin():
+    username = session.get('username', None)
+    return render_template('admin/admin.html', username=username)
+    
+
+@app.route('/teacher', methods=['GET'])
+def teacher():
+    username = session.get('username', None)
+    return render_template('teacher/teacher.html', username=username)
+    
+@app.route('/student', methods=['GET'])
+def student():
+    username = session.get('username', None)
+    return render_template('student/student.html', username=username)
 
 @app.route('/logout')
 def logout():
@@ -144,7 +164,6 @@ def delete_student(id):
     conn.commit()
     flash('Student Removed Successfully')
     return redirect(url_for('Index'))
-
 
 if __name__ == "__main__":
     app.run(debug=True)
