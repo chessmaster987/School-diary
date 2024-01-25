@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Інформація про предмети</title>
+</head>
+
+<body>
+   <h1>Інформація про предмети</h1>
+
+   <table border="1">
+      <thead>
+         <tr>
+            <th>Subject ID</th>
+            <th>Назва предмету</th>
+         </tr>
+      </thead>
+      <tbody>
+         {% for subject in subject_data %}
+         <tr>
+            <td>{{ subject[0] }}</td>
+            <td>{{ subject[1] }}</td>
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+
+</body>
+
+</html>

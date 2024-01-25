@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Інформація про вчителів</title>
+</head>
+
+<body>
+   <h1>Інформація про вчителів</h1>
+
+   <table border="10">
+      <thead>
+         <tr>
+            <th>Login</th>
+            <th>Full Name</th>
+            <th>Предмет, який веде</th>
+            <th>Клас, що веде</th>
+         </tr>
+      </thead>
+      <tbody>
+         {% for teacher in teacher_data %}
+         <tr>
+            <td>{{ teacher[0] }}</td>
+            <td>{{ teacher[1] }}</td>
+            <td>{{ teacher[2] }}</td>
+            <td>{{ teacher[3] }}</td>
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+
+</body>
+
+</html>

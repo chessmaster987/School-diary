@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Інформація про учнів</title>
+</head>
+
+<body>
+   <h1>Інформація про учнів</h1>
+
+   <table border="1">
+      <thead>
+         <tr>
+            <th>Login</th>
+            <th>Full Name</th>
+            <th>Class Name</th>
+         </tr>
+      </thead>
+      <tbody>
+         {% for student in student_data %}
+         <tr>
+            <td>{{ student[0] }}</td>
+            <td>{{ student[1] }}</td>
+            <td>{{ student[2] }}</td>
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+
+</body>
+
+</html>

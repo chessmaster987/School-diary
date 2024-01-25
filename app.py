@@ -36,7 +36,6 @@ def login():
         cur.execute(
             "SELECT * FROM login WHERE username = %s AND password = %s", (username, password))
         rows = cur.fetchall()
-        # conn.close()
 
         cur.execute("SELECT role FROM login WHERE username = %s", (username,))
         role = cur.fetchone()
@@ -49,13 +48,7 @@ def login():
             return redirect('/teacher')
         elif role and role[0] == 'student':
             session['username'] = username
-            print(session['username'])
             return redirect('/student')
-        # if len(rows) > 0:
-            # assuming the username is in your login table
-            # session['username'] = username
-            # flash(f'Logged in as {session["username"]}')
-            # return redirect('/main')
         else:
             return 'Неправильний логін або пароль'
 
@@ -66,7 +59,45 @@ def login():
 def admin():
     username = session.get('username', None)
     return render_template('admin/admin.html', username=username)
+
+
+@app.route('/info_student', methods=['GET', 'POST'])
+def info_student():
+    cur = conn.cursor()
+    cur.execute("""SELECT student.login, student.full_name, classes.class_name FROM student 
+                INNER JOIN classes ON classes.class_number = student.class_number""")
+    student_data = cur.fetchall()
+    return render_template('admin/info_student.html', student_data=student_data)
     
+
+@app.route('/info_teacher', methods=['GET', 'POST'])
+def info_teacher():
+    cur = conn.cursor()
+    cur.execute("""SELECT teacher.login, teacher.full_name, subject.subject_name, COALESCE(classes.class_name, 'Нет класса') AS class_name
+                FROM teacher
+                LEFT JOIN classes ON classes.class_number = teacher.class_number
+                INNER JOIN timetable on timetable.employee_number = teacher.employee_number
+                INNER JOIN subject on subject.subject_number = timetable.subject_number
+                ORDER BY login ASC
+                """)
+    teacher_data = cur.fetchall()
+    return render_template('admin/info_teacher.html', teacher_data=teacher_data)
+
+
+@app.route('/info_classes', methods=['GET', 'POST'])
+def info_classes():
+    cur = conn.cursor()
+    cur.execute("""SELECT * FROM classes""")
+    classes_data = cur.fetchall()
+    return render_template('admin/info_classes.html', classes_data=classes_data)
+
+
+@app.route('/info_subject', methods=['GET', 'POST'])
+def info_subject():
+    cur = conn.cursor()
+    cur.execute("""SELECT * FROM subject""")
+    subject_data = cur.fetchall()
+    return render_template('admin/info_subject.html', subject_data=subject_data)
 
 @app.route('/teacher', methods=['GET'])
 def teacher():
