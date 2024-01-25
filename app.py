@@ -58,7 +58,10 @@ def login():
 @app.route('/admin', methods=['GET'])
 def admin():
     username = session.get('username', None)
-    return render_template('admin/admin.html', username=username)
+    if username == 'admin':
+        return render_template('admin/admin.html', username=username)
+    else:
+        return 'Недостатньо прав для доступу до адміністративної панелі'
 
 
 @app.route('/info_student', methods=['GET', 'POST'])
@@ -68,12 +71,12 @@ def info_student():
                 INNER JOIN classes ON classes.class_number = student.class_number""")
     student_data = cur.fetchall()
     return render_template('admin/info_student.html', student_data=student_data)
-    
+
 
 @app.route('/info_teacher', methods=['GET', 'POST'])
 def info_teacher():
     cur = conn.cursor()
-    cur.execute("""SELECT teacher.login, teacher.full_name, subject.subject_name, COALESCE(classes.class_name, 'Нет класса') AS class_name
+    cur.execute("""SELECT teacher.employee_number, teacher.login, teacher.full_name, subject.subject_name, COALESCE(classes.class_name, 'Нет класса') AS class_name
                 FROM teacher
                 LEFT JOIN classes ON classes.class_number = teacher.class_number
                 INNER JOIN timetable on timetable.employee_number = teacher.employee_number
@@ -99,15 +102,18 @@ def info_subject():
     subject_data = cur.fetchall()
     return render_template('admin/info_subject.html', subject_data=subject_data)
 
+
 @app.route('/teacher', methods=['GET'])
 def teacher():
     username = session.get('username', None)
     return render_template('teacher/teacher.html', username=username)
-    
+
+
 @app.route('/student', methods=['GET'])
 def student():
     username = session.get('username', None)
     return render_template('student/student.html', username=username)
+
 
 @app.route('/logout')
 def logout():
@@ -139,62 +145,55 @@ def Index():
 def add_student():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
-        fname = request.form['fname']
-        lname = request.form['lname']
-        email = request.form['email']
+        login = request.form['login']
+        full_name = request.form['full_name']
+        class_number = request.form['class_number']
         cur.execute(
-            "INSERT INTO students (fname, lname, email) VALUES (%s,%s,%s)", (fname, lname, email))
+            "INSERT INTO student (login, full_name, class_number) VALUES (%s,%s,%s)", (login, full_name, class_number))
         conn.commit()
         flash('Student Added successfully')
-        return redirect(url_for('Index'))
-
-
-# @app.route('/info', methods=['GET'])
-# def infO():
-#    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-#    cur.execute(
-#        "SELECT * FROM student")
-#    conn.commit()
+        return redirect(url_for('info_student'))
 
 @app.route('/edit/<id>', methods=['POST', 'GET'])
 def get_employee(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    cur.execute('SELECT * FROM students WHERE id = %s', (id,))
+    cur.execute('SELECT * FROM student WHERE login = %s', (id,))
     data = cur.fetchall()
     cur.close()
     print(data[0])
     return render_template('edit.html', student=data[0])
 
 
-@app.route('/update/<id>', methods=['POST'])
+@app.route('/update/<id>', methods=['POST', 'GET'])
 def update_student(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
-        fname = request.form['fname']
-        lname = request.form['lname']
-        email = request.form['email']
+        login = request.form['login']
+        full_name = request.form['full_name']
+        class_number = request.form['class_number']
 
-        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cur.execute("""
-            UPDATE students
-            SET fname = %s,
-                lname = %s,
-                email = %s
-            WHERE id = %s
-        """, (fname, lname, email, id))
+            UPDATE student
+            SET login = %s,
+                full_name = %s,
+                class_number = %s
+            WHERE login = %s
+        """, (login, full_name, class_number, id))
         flash('Student Updated Successfully')
         conn.commit()
-        return redirect(url_for('Index'))
+        return redirect(url_for('info_student'))
 
 
 @app.route('/delete/<string:id>', methods=['POST', 'GET'])
 def delete_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    cur.execute('DELETE FROM students WHERE id = {0}'.format(id))
+    cur.execute('DELETE FROM students WHERE login = {0}'.format(id))
     conn.commit()
     flash('Student Removed Successfully')
     return redirect(url_for('Index'))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
