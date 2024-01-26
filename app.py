@@ -14,8 +14,8 @@ conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
                         password=DB_PASS, host=DB_HOST)
 
 
-#@app.route("/main", methods=['GET', 'POST'])
-#def main():
+# @app.route("/main", methods=['GET', 'POST'])
+# def main():
 #    if request.method == 'POST':
 #        action = request.form.get('action')
 #        if action == 'crud':
@@ -85,9 +85,7 @@ def info_teacher():
                 ORDER BY login ASC
                 """)
     teacher_data = cur.fetchall()
-    cur.execute("SELECT class_number, class_name FROM classes")
-    data = cur.fetchall()
-    return render_template('admin/info_teacher.html', teacher_data=teacher_data, classes=data)
+    return render_template('admin/info_teacher.html', teacher_data=teacher_data)
 
 
 @app.route('/info_classes', methods=['GET', 'POST'])
@@ -143,7 +141,7 @@ def logout():
         print(session.get('username', None))
         return redirect(url_for('login'))  # Переадресація на сторінку login
 
-        
+
 @app.route('/crud')
 def Index():
     # if 'logged_in' in session:
@@ -171,11 +169,12 @@ def add_student():
         cur.execute(
             "INSERT INTO student (login, full_name, class_number) VALUES (%s,%s,%s)", (login, full_name, class_number))
         conn.commit()
-        cur.execute("INSERT INTO login (username, password, role) VALUES (%s,%s,%s)",(login, password, role))
+        cur.execute(
+            "INSERT INTO login (username, password, role) VALUES (%s,%s,%s)", (login, password, role))
         conn.commit()
         flash('Student Added successfully')
         return redirect(url_for('info_student'))
-    
+
 
 @app.route('/add_teacher', methods=['POST'])
 def add_teacher():
@@ -187,6 +186,9 @@ def add_teacher():
         class_number = request.form['teacher_class']
         role = request.form['teacher_role']
         print(role)
+        if not class_number:
+            # Якщо значення не введено, встановлюємо його як None (еквівалентно відображенню null у БД)
+            class_number = None
         cur.execute(
             "INSERT INTO teacher (login, full_name, class_number) VALUES (%s,%s,%s)", (login, full_name, class_number))
         conn.commit()
@@ -195,6 +197,7 @@ def add_teacher():
         conn.commit()
         flash('Teacher Added successfully')
         return redirect(url_for('info_teacher'))
+
 
 @app.route('/edit_student/<id>', methods=['POST', 'GET'])
 def get_employee(id):
@@ -226,7 +229,8 @@ def update_student(id):
             WHERE login = %s
         """, (login, full_name, class_number, id))
         conn.commit()
-        cur.execute("""UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, password, id))
+        cur.execute(
+            """UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, password, id))
         conn.commit()
         # flash('Student Updated Successfully')
         return redirect(url_for('info_student'))
