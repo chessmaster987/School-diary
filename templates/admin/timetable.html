@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Штатний розпис</title>
+</head>
+
+<body>
+   <h1>Штатний розпис</h1>
+
+   <table border="3">
+      <thead>
+         <tr>
+            <th>Timetable ID</th>
+            <th>Назва предмету</th>
+            <th>Логін</th>
+            <th>Full Name</th>
+         </tr>
+      </thead>
+      <tbody>
+         {% for timetable in timetable_data %}
+         <tr>
+            <td>{{ timetable[0] }}</td>
+            <td>{{ timetable[1] }}</td>
+            <td>{{ timetable[2] }}</td>
+            <td>{{ timetable[3] }}</td>
+         </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+
+</body>
+
+</html>

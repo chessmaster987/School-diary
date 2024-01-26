@@ -30,10 +30,10 @@
                <a class="nav-link" href="{{ url_for('info_subject') }}">Інформація про предмети</a>
             </li>
             <li class="nav-item">
-               <a class="nav-link" href="#">Розклад занять</a>
+               <a class="nav-link" href="{{ url_for('schedule') }}">Розклад занять</a>
             </li>
             <li class="nav-item">
-               <a class="nav-link" href="#">Штатний розпис</a>
+               <a class="nav-link" href="{{ url_for('timetable') }}">Штатний розпис</a>
             </li>
          </ul>
          <form class="form-inline my-2 my-lg-0" method="post" action="/logout">

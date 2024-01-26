@@ -104,6 +104,22 @@ def info_subject():
     return render_template('admin/info_subject.html', subject_data=subject_data)
 
 
+@app.route('/timetable', methods=['GET', 'POST'])
+def timetable():
+    cur = conn.cursor()
+    cur.execute("""SELECT timetable.timetable_id, subject.subject_name, teacher.login, teacher.full_name
+                FROM timetable
+                INNER JOIN subject ON timetable.subject_number = subject.subject_number
+                INNER JOIN teacher ON timetable.employee_number = teacher.employee_number""")
+    timetable_data = cur.fetchall()
+    return render_template('admin/timetable.html', timetable_data=timetable_data)
+
+
+@app.route('/schedule', methods=['GET', 'POST'])
+def schedule():
+    return render_template('admin/schedule.html')
+
+
 @app.route('/teacher', methods=['GET'])
 def teacher():
     username = session.get('username', None)
