@@ -14,16 +14,16 @@ conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
                         password=DB_PASS, host=DB_HOST)
 
 
-@app.route("/main", methods=['GET', 'POST'])
-def main():
-    if request.method == 'POST':
-        action = request.form.get('action')
-        if action == 'crud':
-            return redirect('/crud')
-        elif action == 'logout':
-            return redirect('/logout')
-
-    return render_template('main.html')
+#@app.route("/main", methods=['GET', 'POST'])
+#def main():
+#    if request.method == 'POST':
+#        action = request.form.get('action')
+#        if action == 'crud':
+#            return redirect('/crud')
+#        elif action == 'logout':
+#            return redirect('/logout')
+#
+#    return render_template('main.html')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -59,6 +59,7 @@ def login():
 def admin():
     username = session.get('username', None)
     if username == 'admin':
+        print(session.get('username', None))
         return render_template('admin/admin.html', username=username)
     else:
         return 'Недостатньо прав для доступу до адміністративної панелі'
@@ -115,18 +116,16 @@ def student():
     return render_template('student/student.html', username=username)
 
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
-    if request.method == 'GET':
+    if request.method == 'POST':
         # Код для виходу
-        # ...
+        # удалить из сессии имя пользователя, если оно там есть
+        session.pop('username', None)
+        print(session.get('username', None))
         return redirect(url_for('login'))  # Переадресація на сторінку login
 
-    # удалить из сессии имя пользователя, если оно там есть
-    # session.pop('username', None)
-    # return redirect(url_for('login'))
-
-
+        
 @app.route('/crud')
 def Index():
     # if 'logged_in' in session:
@@ -185,14 +184,14 @@ def update_student(id):
         return redirect(url_for('info_student'))
 
 
-@app.route('/delete/<string:id>', methods=['POST', 'GET'])
+@app.route('/delete/<id>', methods=['POST', 'GET'])
 def delete_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    cur.execute('DELETE FROM students WHERE login = {0}'.format(id))
+    cur.execute('DELETE FROM student WHERE login = %s', (id,))
     conn.commit()
     flash('Student Removed Successfully')
-    return redirect(url_for('Index'))
+    return redirect(url_for('info_student'))
 
 
 if __name__ == "__main__":
