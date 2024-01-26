@@ -68,8 +68,10 @@ def admin():
 @app.route('/info_student', methods=['GET', 'POST'])
 def info_student():
     cur = conn.cursor()
-    cur.execute("""SELECT student.login, student.full_name, classes.class_name FROM student 
-                INNER JOIN classes ON classes.class_number = student.class_number""")
+    cur.execute("""SELECT student.login, login.password, student.full_name, classes.class_name FROM student 
+                INNER JOIN classes ON classes.class_number = student.class_number
+				INNER JOIN login ON login.username = student.login
+                ORDER BY login ASC""")
     student_data = cur.fetchall()
     return render_template('admin/info_student.html', student_data=student_data)
 
@@ -161,10 +163,15 @@ def add_student():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         login = request.form['login']
+        password = request.form['password']
         full_name = request.form['full_name']
         class_number = request.form['class_number']
+        role = request.form['student_role']
+        print(role)
         cur.execute(
             "INSERT INTO student (login, full_name, class_number) VALUES (%s,%s,%s)", (login, full_name, class_number))
+        conn.commit()
+        cur.execute("INSERT INTO login (username, password, role) VALUES (%s,%s,%s)",(login, password, role))
         conn.commit()
         flash('Student Added successfully')
         return redirect(url_for('info_student'))
@@ -172,8 +179,10 @@ def add_student():
 @app.route('/edit/<id>', methods=['POST', 'GET'])
 def get_employee(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    cur.execute('SELECT * FROM student WHERE login = %s', (id,))
+    cur.execute("""SELECT student.login, login.password, student.full_name, student.class_number
+                FROM student 
+                INNER JOIN login ON student.login = login.username
+                WHERE login = %s""", (id,))
     data = cur.fetchall()
     cur.close()
     print(data[0])
@@ -185,6 +194,7 @@ def update_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         login = request.form['login']
+        password = request.form['password']
         full_name = request.form['full_name']
         class_number = request.form['class_number']
 
@@ -195,8 +205,10 @@ def update_student(id):
                 class_number = %s
             WHERE login = %s
         """, (login, full_name, class_number, id))
-        flash('Student Updated Successfully')
         conn.commit()
+        cur.execute("""UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, password, id))
+        conn.commit()
+        # flash('Student Updated Successfully')
         return redirect(url_for('info_student'))
 
 
@@ -205,6 +217,8 @@ def delete_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute('DELETE FROM student WHERE login = %s', (id,))
+    conn.commit()
+    cur.execute('DELETE FROM login WHERE username = %s', (id,))
     conn.commit()
     flash('Student Removed Successfully')
     return redirect(url_for('info_student'))
