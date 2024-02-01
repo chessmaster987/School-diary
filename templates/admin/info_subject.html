@@ -39,7 +39,7 @@
 <div class="student">
    <div class="col-md-4">
       <div class="card card-body">
-         <form action="#" method="POST">
+         <form action="{{url_for('add_subject')}}" method="POST">
             <div class="form-group">
                <input type="text" class="form-control" name="subject_name" placeholder="Назва предмету">
             </div>
@@ -63,8 +63,8 @@
                <td>{{ subject[0] }}</td>
                <td>{{ subject[1] }}</td>
                <td width="130">
-                  <a href="/edit/{{subject[0]}}" class="btn btn-secondary btn-sm">edit</a>
-                  <a href="/delete/{{subject[0]}}" class="btn btn-danger btn-delete btn-sm">delete</a>
+                  <a href="/edit_subject/{{subject[0]}}" class="btn btn-secondary btn-sm">edit</a>
+                  <a href="/delete_subject/{{subject[0]}}" class="btn btn-danger btn-delete btn-sm">delete</a>
                </td>
             </tr>
             {% endfor %}
