@@ -223,6 +223,19 @@ def add_subject():
         return redirect(url_for('info_subject'))
 
 
+@app.route('/add_timetable', methods=['POST'])
+def add_timetable():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        subject_name = request.form['subject_name']
+        teacher_name = request.form['teacher_name']
+        cur.execute(
+            "INSERT INTO timetable (subject_number, employee_number) VALUES (%s, %s)", (subject_name, teacher_name))
+        conn.commit()
+        flash('Timetable Added successfully')
+        return redirect(url_for('timetable'))
+
+
 @app.route('/edit_student/<id>', methods=['POST', 'GET'])
 def get_employee(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -271,6 +284,18 @@ def get_subject(id):
     cur.close()
     print(data[0])
     return render_template('edit_subject.html', subject=data[0])
+
+
+@app.route('/edit_timetable/<id>', methods=['POST', 'GET'])
+def get_timetable(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT timetable_id, subject_number, employee_number
+                FROM timetable
+                WHERE timetable_id = %s""", (id,))
+    data = cur.fetchall()
+    cur.close()
+    print(data[0])
+    return render_template('edit_timetable.html', timetable=data[0])
 
 
 @app.route('/update_student/<id>', methods=['POST', 'GET'])
@@ -348,6 +373,19 @@ def update_subject(id):
         return redirect(url_for('info_subject'))
 
 
+@app.route('/update_timetable/<id>', methods=['POST', 'GET'])
+def update_timetable(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        subject_name = request.form['subject_name']
+        teacher_name = request.form['teacher_name']
+        cur.execute(
+            """UPDATE timetable SET subject_number = %s, employee_number = %s WHERE timetable_id = %s""", (subject_name, teacher_name, id))
+        conn.commit()
+        # flash('Timetable Updated Successfully')
+        return redirect(url_for('timetable'))
+
+
 @app.route('/delete_student/<id>', methods=['POST', 'GET'])
 def delete_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -390,6 +428,16 @@ def delete_subject(id):
     conn.commit()
     flash('Subject Removed Successfully')
     return redirect(url_for('info_subject'))
+
+
+@app.route('/delete_timetable/<id>', methods=['POST', 'GET'])
+def delete_timetable(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute('DELETE FROM timetable WHERE timetable_id = %s', (id,))
+    conn.commit()
+    flash('Timetable Removed Successfully')
+    return redirect(url_for('timetable'))
 
 
 if __name__ == "__main__":

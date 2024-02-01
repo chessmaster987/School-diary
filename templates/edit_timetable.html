@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="timetable">
+   <div class="col-md-4 offset-md-4">
+      <div class="card card-body">
+         <form action="{{ url_for('update_timetable', id=timetable.timetable_id) }}" method="POST">
+            <div class="form-group">
+               <input type="text" name="timetable_id" value="{{timetable.timetable_id}}" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+               <input type="text" name="subject_name" value="{{timetable.subject_number}}" class="form-control">
+            </div>
+            <div class="form-group">
+               <input type="text" name="teacher_name" value="{{timetable.employee_number}}" class="form-control">
+            </div>
+            <div class="form-group">
+               <button type="submit" class="btn btn-primary btn-block">
+                  Update
+               </button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+{% endblock %}
