@@ -79,7 +79,7 @@ def info_student():
 @app.route('/info_teacher', methods=['GET', 'POST'])
 def info_teacher():
     cur = conn.cursor()
-    cur.execute("""SELECT teacher.employee_number, teacher.login, login.password, teacher.full_name
+    cur.execute("""SELECT teacher.login, teacher.employee_number, login.password, teacher.full_name
                 FROM teacher
                 INNER JOIN login on login.username = teacher.login
                 ORDER BY login ASC
@@ -212,6 +212,19 @@ def get_employee(id):
     return render_template('edit_student.html', student=data[0])
 
 
+@app.route('/edit_teacher/<id>', methods=['POST', 'GET'])
+def get_teacher(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT teacher.login, login.password, teacher.full_name, teacher.class_number
+                FROM teacher
+                INNER JOIN login ON teacher.login = login.username
+                WHERE login = %s""", (id,))
+    data = cur.fetchall()
+    cur.close()
+    print(data[0])
+    return render_template('edit_teacher.html', teacher=data[0])
+
+
 @app.route('/update_student/<id>', methods=['POST', 'GET'])
 def update_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -236,6 +249,33 @@ def update_student(id):
         return redirect(url_for('info_student'))
 
 
+@app.route('/update_teacher/<id>', methods=['POST', 'GET'])
+def update_teacher(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        login = request.form['login']
+        password = request.form['password']
+        full_name = request.form['full_name']
+        class_number = request.form['class_number']
+
+        if not class_number:
+            # Якщо значення не введено, встановлюємо його як None (еквівалентно відображенню null у БД)
+            class_number = None
+        cur.execute("""
+            UPDATE teacher
+            SET login = %s,
+                full_name = %s,
+                class_number = %s
+            WHERE login = %s
+        """, (login, full_name, class_number, id))
+        conn.commit()
+        cur.execute(
+            """UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, password, id))
+        conn.commit()
+        # flash('Teacher Updated Successfully')
+        return redirect(url_for('info_teacher'))
+
+
 @app.route('/delete_student/<id>', methods=['POST', 'GET'])
 def delete_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -246,6 +286,18 @@ def delete_student(id):
     conn.commit()
     flash('Student Removed Successfully')
     return redirect(url_for('info_student'))
+
+
+@app.route('/delete_teacher/<id>', methods=['POST', 'GET'])
+def delete_teacher(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute('DELETE FROM teacher WHERE login = %s', (id,))
+    conn.commit()
+    cur.execute('DELETE FROM login WHERE username = %s', (id,))
+    conn.commit()
+    flash('Teacher Removed Successfully')
+    return redirect(url_for('info_teacher'))
 
 
 if __name__ == "__main__":
