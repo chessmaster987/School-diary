@@ -34,21 +34,22 @@ def login():
 
         cur = conn.cursor()
         cur.execute(
-            "SELECT * FROM login WHERE username = %s AND password = %s", (username, password))
-        rows = cur.fetchall()
+            "SELECT username FROM login WHERE username = %s AND password = %s", (username, password))
+        user = cur.fetchone()
 
-        cur.execute("SELECT role FROM login WHERE username = %s", (username,))
-        role = cur.fetchone()
+        if user:
+            cur.execute("SELECT role FROM login WHERE username = %s", (username,))
+            role = cur.fetchone()
 
-        if role and role[0] == 'admin':
-            session['username'] = username
-            return redirect('/admin')
-        elif role and role[0] == 'teacher':
-            session['username'] = username
-            return redirect('/teacher')
-        elif role and role[0] == 'student':
-            session['username'] = username
-            return redirect('/student')
+            if role and role[0] == 'admin':
+                session['username'] = username
+                return redirect('/admin')
+            elif role and role[0] == 'teacher':
+                session['username'] = username
+                return redirect('/teacher')
+            elif role and role[0] == 'student':
+                session['username'] = username
+                return redirect('/student')
         else:
             return 'Неправильний логін або пароль'
 
@@ -126,10 +127,10 @@ def teacher():
     return render_template('teacher/teacher.html', username=username)
 
 
-@app.route('/student', methods=['GET'])
-def student():
-    username = session.get('username', None)
-    return render_template('student/student.html', username=username)
+#@app.route('/student', methods=['GET'])
+#def student():
+#    username = session.get('username', None)
+#    return render_template('student/student.html', username=username)
 
 
 @app.route('/logout', methods=['GET', 'POST'])
@@ -438,6 +439,18 @@ def delete_timetable(id):
     conn.commit()
     flash('Timetable Removed Successfully')
     return redirect(url_for('timetable'))
+
+
+##
+##
+##    УЧЕНЬ!!!
+##
+##
+
+@app.route('/student', methods=['GET'])
+def student():
+    username = session.get('username', None)
+    return render_template('student/student.html', username=username)
 
 
 if __name__ == "__main__":
