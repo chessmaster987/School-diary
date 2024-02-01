@@ -199,6 +199,18 @@ def add_teacher():
         return redirect(url_for('info_teacher'))
 
 
+@app.route('/add_class', methods=['POST'])
+def add_class():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        class_name = request.form['class_name']
+        cur.execute(
+            "INSERT INTO classes (class_name) VALUES (%s)", (class_name,))
+        conn.commit()
+        flash('Class Added successfully')
+        return redirect(url_for('info_classes'))
+
+
 @app.route('/edit_student/<id>', methods=['POST', 'GET'])
 def get_employee(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -224,6 +236,17 @@ def get_teacher(id):
     print(data[0])
     return render_template('edit_teacher.html', teacher=data[0])
 
+
+@app.route('/edit_class/<id>', methods=['POST', 'GET'])
+def get_class(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT class_number, class_name 
+                FROM classes
+                WHERE class_number = %s""", (id,))
+    data = cur.fetchall()
+    cur.close()
+    print(data[0])
+    return render_template('edit_class.html', classes=data[0])
 
 @app.route('/update_student/<id>', methods=['POST', 'GET'])
 def update_student(id):
@@ -276,6 +299,18 @@ def update_teacher(id):
         return redirect(url_for('info_teacher'))
 
 
+@app.route('/update_class/<id>', methods=['POST', 'GET'])
+def update_class(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        class_name = request.form['class_name']
+        cur.execute(
+            """UPDATE classes SET class_name = %s WHERE class_number = %s""", (class_name, id))
+        conn.commit()
+        # flash('Class Updated Successfully')
+        return redirect(url_for('info_classes'))
+
+
 @app.route('/delete_student/<id>', methods=['POST', 'GET'])
 def delete_student(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -298,6 +333,16 @@ def delete_teacher(id):
     conn.commit()
     flash('Teacher Removed Successfully')
     return redirect(url_for('info_teacher'))
+
+
+@app.route('/delete_class/<id>', methods=['POST', 'GET'])
+def delete_class(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute('DELETE FROM classes WHERE class_number = %s', (id,))
+    conn.commit()
+    flash('Class Removed Successfully')
+    return redirect(url_for('info_classes'))
 
 
 if __name__ == "__main__":

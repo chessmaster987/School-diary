@@ -33,13 +33,13 @@
 
 {% extends "layout.html" %}
 {% block body %}
-<div class="student">
+<div class="class">
    <h3>Інформація про класи</h3>
 </div>
-<div class="student">
+<div class="class">
    <div class="col-md-4">
       <div class="card card-body">
-         <form action="#" method="POST">
+         <form action="{{url_for('add_class')}}" method="POST">
             <div class="form-group">
                <input type="text" class="form-control" name="class_name" placeholder="Назва класу">
             </div>
@@ -63,8 +63,8 @@
                <td>{{ classes[0] }}</td>
                <td>{{ classes[1] }}</td>
                <td width="130">
-                  <a href="/edit/{{classes[0]}}" class="btn btn-secondary btn-sm">edit</a>
-                  <a href="/delete/{{classes[0]}}" class="btn btn-danger btn-delete btn-sm">delete</a>
+                  <a href="/edit_class/{{classes[0]}}" class="btn btn-secondary btn-sm">edit</a>
+                  <a href="/delete_class/{{classes[0]}}" class="btn btn-danger btn-delete btn-sm">delete</a>
                </td>
             </tr>
             {% endfor %}
