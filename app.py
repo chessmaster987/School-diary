@@ -450,8 +450,62 @@ def delete_timetable(id):
 @app.route('/student', methods=['GET'])
 def student():
     username = session.get('username', None)
+    print(session.get('username', None))
     return render_template('student/student.html', username=username)
 
+
+@app.route('/info_homework', methods=['GET'])
+def info_homework():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""SELECT homework.date, subject.subject_name, homework.homework_text
+                FROM homework
+                INNER JOIN schedule on homework.lesson_id = schedule.schedule_id
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                INNER JOIN student on classes.class_number = student.class_number
+                WHERE student.login = %s""", (username,))
+    
+    homework = cur.fetchall()
+    cur.close()
+    return render_template('student/info_homework.html', homework=homework)
+
+
+@app.route('/notification', methods=['GET'])
+def notification():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""SELECT notification.date, teacher.full_name, notification.description
+                FROM notification
+                INNER JOIN teacher on notification.employee_number = teacher.employee_number
+                INNER JOIN classes on notification.class_number = classes.class_number
+                INNER JOIN student on classes.class_number = student.class_number
+                WHERE student.login = %s""", (username,))
+
+    notif = cur.fetchall()
+    cur.close()
+    return render_template('student/notification.html', notif=notif)
+
+
+@app.route('/my_teachers', methods=['GET'])
+def my_teachers():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""SELECT teacher.full_name, subject.subject_name
+                FROM teacher
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                INNER JOIN schedule on timetable.timetable_id = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                INNER JOIN student on classes.class_number = student.class_number
+                WHERE student.login = %s""", (username,))
+    my_teachers = cur.fetchall()
+    cur.close()
+    return render_template('student/my_teachers.html', my_teachers=my_teachers)
 
 if __name__ == "__main__":
     app.run(debug=True)
