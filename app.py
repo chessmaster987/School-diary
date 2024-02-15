@@ -551,5 +551,26 @@ def teacher_classes_detail(class_name):
     return render_template('teacher/teacher_classes_detail.html', teacher_classes_detail=teacher_classes_detail)
 
 
+def get_teachers_for_zvit():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT employee_number FROM teacher")
+    teachers = cur.fetchall()
+    conn.close()
+    return teachers
+
+@app.route('/zvit_teacher', methods=['GET', 'POST'])
+def zvit_teacher():
+    zvit_info = []
+    if request.method == 'POST':
+        teacher = request.form['teacher']
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute(
+            """SELECT * FROM teacher_report(%s, %s, %s)""", (teacher, start_date, end_date))
+        zvit_info = cur.fetchall()
+        
+    return render_template('admin/zvit_teacher.html', zvit_data=zvit_info)
+
 if __name__ == "__main__":
     app.run(debug=True)
