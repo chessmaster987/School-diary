@@ -1,6 +1,9 @@
 from flask import Flask, session, render_template, request, redirect, url_for, flash
 import psycopg2  # pip install psycopg2
 import psycopg2.extras
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
 
 app = Flask(__name__)
 app.secret_key = "vlad"
@@ -38,7 +41,8 @@ def login():
         user = cur.fetchone()
 
         if user:
-            cur.execute("SELECT role FROM login WHERE username = %s", (username,))
+            cur.execute(
+                "SELECT role FROM login WHERE username = %s", (username,))
             role = cur.fetchone()
 
             if role and role[0] == 'admin':
@@ -127,8 +131,8 @@ def teacher():
     return render_template('teacher/teacher.html', username=username)
 
 
-#@app.route('/student', methods=['GET'])
-#def student():
+# @app.route('/student', methods=['GET'])
+# def student():
 #    username = session.get('username', None)
 #    return render_template('student/student.html', username=username)
 
@@ -443,7 +447,7 @@ def delete_timetable(id):
 
 ##
 ##
-##    УЧЕНЬ!!!
+# УЧЕНЬ!!!
 ##
 ##
 
@@ -467,7 +471,7 @@ def info_homework():
                 INNER JOIN classes on schedule.class_number = classes.class_number
                 INNER JOIN student on classes.class_number = student.class_number
                 WHERE student.login = %s""", (username,))
-    
+
     homework = cur.fetchall()
     cur.close()
     return render_template('student/info_homework.html', homework=homework)
@@ -506,6 +510,46 @@ def my_teachers():
     my_teachers = cur.fetchall()
     cur.close()
     return render_template('student/my_teachers.html', my_teachers=my_teachers)
+
+
+##
+##
+# ВЧИТЕЛЬ!!!
+##
+##
+
+@app.route('/teacher_detail', methods=['GET', 'POST'])
+def teacher_classes():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""SELECT DISTINCT classes.class_name 
+                FROM teacher 
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                WHERE teacher.login = %s""", (username,))
+    teacher_classes = cur.fetchall()
+    cur.close()
+    return render_template('teacher/teacher_classes.html', teacher_classes=teacher_classes)
+
+
+@app.route('/teacher_classes_detail/<class_name>', methods=['GET'])
+def teacher_classes_detail(class_name):
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""SELECT DISTINCT student.login, student.full_name 
+                FROM teacher 
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                INNER JOIN student on classes.class_number = student.class_number
+                WHERE teacher.login = %s AND classes.class_name = %s""", (username, class_name))
+    teacher_classes_detail = cur.fetchall()
+    cur.close()
+    return render_template('teacher/teacher_classes_detail.html', teacher_classes_detail=teacher_classes_detail)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

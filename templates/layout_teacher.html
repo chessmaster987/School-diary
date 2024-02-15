@@ -1,27 +1,17 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>TEACHER</title>
-</head>
-
-<body>
-   <h1>TEACHER! Привіт, {{ username }}</h1>
-</body>
-
-</html>-->
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
    <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>TEACHER</title>
    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
       integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet"
+      id="bootstrap-css">
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+   <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+   <script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
 </head>
 
 <body>
@@ -35,13 +25,13 @@
       <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
          <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
             <li class="nav-item">
-               <a class="nav-link" href="{{url_for('teacher_classes')}}">Дані про учнів</a>
+               <a class="nav-link" href="#">Дані про учня</a>
             </li>
             <li class="nav-item">
-               <a class="nav-link" href="#">!!!</a>
+               <a class="nav-link" href="#">Пункт 2</a>
             </li>
             <li class="nav-item">
-               <a class="nav-link" href="#">....</a>
+               <a class="nav-link" href="#">Пункт 3</a>
             </li>
             <li class="nav-item">
                <a class="nav-link" href="#">Пункт 4</a>
@@ -57,7 +47,15 @@
       </div>
    </nav>
 
-   <h1>TEACHER! Привіт, {{ username }} </h1>
+   <!--<nav class="navbar navbar-dark bg-dark">
+      <a class="navbar-brand" href="/">Python Flask Student Create, read, update and delete (CRUD) using PostgreSQL
+         psycopg2 and dataTables bootstrap</a>
+   </nav> -->
+
+   <div class="container pt-4">
+      {% block body %}
+      {% endblock %}
+   </div>
 
    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -68,6 +66,17 @@
    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"
       integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
       crossorigin="anonymous"></script>
+
+   <script>
+      $(document).ready(function () {
+         $('#example').DataTable({
+            "aLengthMenu": [[3, 5, 10, 25, -1], [3, 5, 10, 25, "All"]],
+            "iDisplayLength": 3
+         }
+         );
+      });
+
+   </script>
 </body>
 
 </html>
