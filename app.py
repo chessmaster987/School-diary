@@ -551,12 +551,15 @@ def teacher_classes_detail(class_name):
     return render_template('teacher/teacher_classes_detail.html', teacher_classes_detail=teacher_classes_detail)
 
 
+# for admin panel adding a new features
+
 def get_teachers_for_zvit():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("SELECT employee_number FROM teacher")
     teachers = cur.fetchall()
     conn.close()
     return teachers
+
 
 @app.route('/zvit_teacher', methods=['GET', 'POST'])
 def zvit_teacher():
@@ -569,8 +572,55 @@ def zvit_teacher():
         cur.execute(
             """SELECT * FROM teacher_report(%s, %s, %s)""", (teacher, start_date, end_date))
         zvit_info = cur.fetchall()
-        
+
     return render_template('admin/zvit_teacher.html', zvit_data=zvit_info)
+
+
+@app.route('/homework', methods=['GET', 'POST'])
+def homework():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""SELECT DISTINCT classes.class_name 
+                FROM teacher 
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                WHERE teacher.login = %s""", (username,))
+    teacher_classes = cur.fetchall()
+    cur.close()
+    return render_template('teacher/homework.html', teacher_classes=teacher_classes)
+
+
+def get_teacher_subjects():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""
+        SELECT subject.subject_name
+        FROM teacher
+        INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+        INNER JOIN subject on timetable.subject_number = subject.subject_number
+        WHERE teacher.login = %s """, (username,))
+    
+    subjects = [row[0] for row in cur.fetchall()]
+    cur.close()
+    return subjects
+
+@app.route('/add_homework', methods=['GET', 'POST'])
+def add_homework():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT homework.homework_number, homework.date, subject.subject_name, homework.homework_text
+                FROM homework
+                INNER JOIN schedule on homework.lesson_id = schedule.schedule_id
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                INNER JOIN teacher on timetable.employee_number = teacher.employee_number
+                WHERE teacher.login = %s""", (username,))
+    teacher_homework = cur.fetchall()
+    cur.close()
+    teacher_subjects = get_teacher_subjects()
+    return render_template('teacher/add_homework.html', teacher_subjects=teacher_subjects, teacher_homework=teacher_homework)
 
 if __name__ == "__main__":
     app.run(debug=True)
