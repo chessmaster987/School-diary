@@ -511,6 +511,20 @@ def my_teachers():
     cur.close()
     return render_template('student/my_teachers.html', my_teachers=my_teachers)
 
+@app.route('/homework_comments', methods=['GET'])
+def homework_comments():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT DISTINCT homeworkcomment.date, subject.subject_name, homeworkcomment.comment
+                FROM homeworkcomment
+                INNER JOIN homework on homeworkcomment.homework_number = homework.homework_number
+                INNER JOIN schedule on homework.lesson_id = schedule.schedule_id
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                WHERE homeworkcomment.login = %s""", (username,))
+    comment_data = cur.fetchall()
+    cur.close()
+    return render_template('student/homework_comments.html', comment_data=comment_data)
 
 ##
 ##
@@ -601,15 +615,32 @@ def get_teacher_subjects():
         INNER JOIN timetable on teacher.employee_number = timetable.employee_number
         INNER JOIN subject on timetable.subject_number = subject.subject_number
         WHERE teacher.login = %s """, (username,))
-    
+
     subjects = [row[0] for row in cur.fetchall()]
     cur.close()
     return subjects
+
 
 @app.route('/add_homework', methods=['GET', 'POST'])
 def add_homework():
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    if request.method == 'POST':
+        date = request.form['start_date']
+        teacher_subject_pre = request.form['teacher_subject']
+        print(teacher_subject_pre)
+        cur.execute("""SELECT subject_number FROM subject WHERE subject_name = %s""", (teacher_subject_pre,))
+        teacher_subject = cur.fetchone()[0]
+        print(teacher_subject)
+        homework_description = request.form['homework_description']
+        
+        cur.execute(
+            "INSERT INTO homework (homework_text, lesson_id, date) VALUES (%s,%s,%s)", (homework_description, teacher_subject, date))
+        conn.commit()
+        return redirect(url_for('add_homework'))
+
+    class_name = request.args.get('class_name', None)
     cur.execute("""SELECT homework.homework_number, homework.date, subject.subject_name, homework.homework_text
                 FROM homework
                 INNER JOIN schedule on homework.lesson_id = schedule.schedule_id
@@ -621,6 +652,7 @@ def add_homework():
     cur.close()
     teacher_subjects = get_teacher_subjects()
     return render_template('teacher/add_homework.html', teacher_subjects=teacher_subjects, teacher_homework=teacher_homework)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
