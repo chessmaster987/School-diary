@@ -4,6 +4,7 @@ import psycopg2.extras
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "vlad"
@@ -511,6 +512,7 @@ def my_teachers():
     cur.close()
     return render_template('student/my_teachers.html', my_teachers=my_teachers)
 
+
 @app.route('/homework_comments', methods=['GET'])
 def homework_comments():
     username = session.get('username', None)
@@ -531,6 +533,7 @@ def homework_comments():
 # ВЧИТЕЛЬ!!!
 ##
 ##
+
 
 @app.route('/teacher_detail', methods=['GET', 'POST'])
 def teacher_classes():
@@ -590,6 +593,7 @@ def zvit_teacher():
     return render_template('admin/zvit_teacher.html', zvit_data=zvit_info)
 
 
+################################
 @app.route('/homework', methods=['GET', 'POST'])
 def homework():
     username = session.get('username', None)
@@ -625,16 +629,17 @@ def get_teacher_subjects():
 def add_homework():
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
+
     if request.method == 'POST':
         date = request.form['start_date']
         teacher_subject_pre = request.form['teacher_subject']
         print(teacher_subject_pre)
-        cur.execute("""SELECT subject_number FROM subject WHERE subject_name = %s""", (teacher_subject_pre,))
+        cur.execute(
+            """SELECT subject_number FROM subject WHERE subject_name = %s""", (teacher_subject_pre,))
         teacher_subject = cur.fetchone()[0]
         print(teacher_subject)
         homework_description = request.form['homework_description']
-        
+
         cur.execute(
             "INSERT INTO homework (homework_text, lesson_id, date) VALUES (%s,%s,%s)", (homework_description, teacher_subject, date))
         conn.commit()
@@ -652,6 +657,106 @@ def add_homework():
     cur.close()
     teacher_subjects = get_teacher_subjects()
     return render_template('teacher/add_homework.html', teacher_subjects=teacher_subjects, teacher_homework=teacher_homework)
+
+################################
+
+
+@app.route('/teacher_notif', methods=['GET'])
+def teacher_notif():
+    return render_template('teacher/notif_event.html')
+
+
+@app.route('/teacher_notif/classes', methods=['GET'])
+def notif_classes():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(
+        """SELECT employee_number FROM teacher WHERE teacher.login = %s""", (username,))
+    teacher_id = cur.fetchone()[0]
+    cur.execute("""SELECT notification.notification_number, notification.date, classes.class_name, notification.description
+                FROM notification
+                INNER JOIN classes on notification.class_number = classes.class_number
+                WHERE notification.employee_number = %s""", (teacher_id,))
+    notif_classes_data = cur.fetchall()
+    teacher_classes = get_teacher_classes()
+    return render_template('teacher/notif_classes.html', notif_classes_data=notif_classes_data, teacher_classes=teacher_classes)
+
+
+@app.route('/teacher_notif/students', methods=['GET'])
+def notif_students():
+    return render_template('teacher/notif_students.html')
+
+
+def get_teacher_classes():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""
+                SELECT DISTINCT classes.class_number 
+                FROM teacher
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN schedule on timetable.timetable_id = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                WHERE teacher.login = %s""", (username,))
+
+    classes = [row[0] for row in cur.fetchall()]
+    cur.close()
+    return classes
+
+
+@app.route('/teacher_notif/classes/add_classes_notif', methods=['GET', 'POST'])
+def add_classes_notif():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        class_number = request.form['teacher_classes']
+        # class_number = request.form.get('teacher_classes')
+        notif_text = request.form['notif_text']
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        cur.execute(
+            """SELECT employee_number FROM teacher WHERE teacher.login = %s""", (username,))
+        teacher_id = cur.fetchone()[0]
+        cur.execute(
+            "INSERT INTO notification (date, class_number, employee_number, description) VALUES (%s,%s,%s,%s)", (current_date, class_number, teacher_id, notif_text))
+        conn.commit()
+        return redirect(url_for('notif_classes'))
+
+    return render_template('teacher/notif_classes.html')
+
+
+@app.route('/edit_classes_notif/<id>', methods=['POST', 'GET'])
+def edit_classes_notif(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT notification_number, class_number, description
+                FROM notification
+                WHERE notification_number = %s""", (id,))
+    data = cur.fetchall()
+    cur.close()
+    print(data[0])
+    return render_template('teacher/edit_classes_notif.html', notification=data[0])
+
+
+@app.route('/update_classes_notif/<id>', methods=['POST', 'GET'])
+def update_classes_notif(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        class_number = request.form['class_number']
+        notif_text = request.form['notif_text']
+
+        cur.execute("""
+            UPDATE notification
+            SET description = %s
+            WHERE notification_number = %s
+        """, (notif_text, id))
+        conn.commit()
+        return redirect(url_for('notif_classes'))
+
+
+@app.route('/delete_classes_notif/<id>', methods=['POST', 'GET'])
+def delete_classes_notif(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('DELETE FROM notification WHERE notification_number = %s', (id,))
+    conn.commit()
+    return redirect(url_for('notif_classes'))
 
 
 if __name__ == "__main__":

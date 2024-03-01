@@ -3,19 +3,21 @@
   <component name="ChangeListManager">
     <list default="true" id="47c6d986-0e0b-4e4b-8689-3c04124bc7f0" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/admin/info_student.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin/info_student.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/admin/info_teacher.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/admin/info_teacher.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/edit.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/edit.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/layout_teacher.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/layout_teacher.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/teacher/teacher.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/teacher/teacher.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/teacher/teacher_classes.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/teacher/teacher_classes.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 0
-}]]></component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="2bSopezVYMFjN8farce0T4ZIVf0" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -24,7 +26,8 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true"
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main"
   }
 }]]></component>
   <component name="SharedIndexes">

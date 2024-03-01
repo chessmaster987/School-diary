@@ -1,0 +1,22 @@
+{% extends "layout_teacher.html" %}
+{% block body %}
+<div class="teacher">
+   <div class="col-md-4 offset-md-4">
+      <div class="card card-body">
+         <form action="{{ url_for('update_classes_notif', id=notification.notification_number) }}" method="POST">
+            <div class="form-group">
+               <input type="text" name="class_number" value="{{notification.class_number}}" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+               <input type="text" name="notif_text" value="{{notification.description}}" class="form-control">
+            </div>
+            <div class="form-group">
+               <button type="submit" class="btn btn-primary btn-block">
+                  Update
+               </button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+{% endblock %}
