@@ -758,6 +758,36 @@ def delete_classes_notif(id):
     conn.commit()
     return redirect(url_for('notif_classes'))
 
+#for student: schedule
+@app.route('/student_schedule', methods=['POST', 'GET'])
+def student_schedule():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT classes.class_number FROM classes
+                INNER JOIN student on classes.class_number = student.class_number
+                WHERE student.login = %s""", (username,))
+    class_numb = cur.fetchone()[0]
+    cur.execute("""SELECT Classes.class_name, Schedule.day, Schedule.subject_number, Subject.subject_name, Teacher.full_name
+                FROM Schedule
+                INNER JOIN Classes ON Schedule.class_number = Classes.class_number
+                INNER JOIN Timetable ON Schedule.timetable_id = Timetable.timetable_id
+                INNER JOIN Teacher ON Timetable.employee_number = Teacher.employee_number
+                INNER JOIN Subject ON Schedule.subject_number = Subject.subject_number
+                WHERE Schedule.class_number = %s
+                ORDER BY
+                CASE Schedule.day
+                	WHEN 'Monday' THEN 1
+                	WHEN 'Tuesday' THEN 2
+                	WHEN 'Wednesday' THEN 3
+                	WHEN 'Thursday' THEN 4
+                	WHEN 'Friday' THEN 5
+                END, Schedule.subject_number""", (class_numb,))
+    schedule_data = cur.fetchall()
+    cur.close()
+    return render_template('student/student_schedule.html', schedule_data=schedule_data)
+
+    
+
 
 if __name__ == "__main__":
     app.run(debug=True)
