@@ -121,11 +121,6 @@ def timetable():
     return render_template('admin/timetable.html', timetable_data=timetable_data)
 
 
-@app.route('/schedule', methods=['GET', 'POST'])
-def schedule():
-    return render_template('admin/schedule.html')
-
-
 @app.route('/teacher', methods=['GET'])
 def teacher():
     username = session.get('username', None)
@@ -758,7 +753,9 @@ def delete_classes_notif(id):
     conn.commit()
     return redirect(url_for('notif_classes'))
 
-#for student: schedule
+# for student: schedule
+
+
 @app.route('/student_schedule', methods=['POST', 'GET'])
 def student_schedule():
     username = session.get('username', None)
@@ -786,7 +783,77 @@ def student_schedule():
     cur.close()
     return render_template('student/student_schedule.html', schedule_data=schedule_data)
 
-    
+# for teacher: schedule
+
+
+@app.route('/teacher_schedule', methods=['POST', 'GET'])
+def teacher_schedule():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT Classes.class_name, Schedule.day, Schedule.subject_number, Subject.subject_name, Teacher.full_name
+                FROM Schedule
+                INNER JOIN Classes ON Schedule.class_number = Classes.class_number
+                INNER JOIN Timetable ON Schedule.timetable_id = Timetable.timetable_id
+                INNER JOIN Teacher ON Timetable.employee_number = Teacher.employee_number
+                INNER JOIN Subject ON Schedule.subject_number = Subject.subject_number
+                ORDER BY Classes.class_name,
+                CASE Schedule.day
+                	WHEN 'Monday' THEN 1
+                	WHEN 'Tuesday' THEN 2
+                	WHEN 'Wednesday' THEN 3
+                	WHEN 'Thursday' THEN 4
+                	WHEN 'Friday' THEN 5
+                END, Schedule.subject_number""")
+    schedule_data = cur.fetchall()
+    cur.close()
+    return render_template('teacher/teacher_schedule.html', schedule_data=schedule_data)
+
+# for admin: schedule
+
+
+@app.route('/admin_schedule', methods=['POST', 'GET'])
+def admin_schedule():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT subject_number, subject_name FROM Subject")
+    subjects = cur.fetchall()
+    cur.execute("""SELECT Schedule.schedule_id, Classes.class_name, Schedule.day, Schedule.subject_number, Subject.subject_name, Teacher.full_name
+                FROM Schedule
+                INNER JOIN Classes ON Schedule.class_number = Classes.class_number
+                INNER JOIN Timetable ON Schedule.timetable_id = Timetable.timetable_id
+                INNER JOIN Teacher ON Timetable.employee_number = Teacher.employee_number
+                INNER JOIN Subject ON Schedule.subject_number = Subject.subject_number
+                ORDER BY Classes.class_name,
+                CASE Schedule.day
+                	WHEN 'Monday' THEN 1
+                	WHEN 'Tuesday' THEN 2
+                	WHEN 'Wednesday' THEN 3
+                	WHEN 'Thursday' THEN 4
+                	WHEN 'Friday' THEN 5
+                END, Schedule.subject_number""")
+    schedule_data = cur.fetchall()
+    cur.close()
+    return render_template('admin/admin_schedule.html', schedule_data=schedule_data, subjects=subjects)
+
+
+@app.route('/add_schedule_component', methods=['POST'])
+def add_schedule_component():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        teacher_id = request.form['teacher_id']
+        class_name = request.form['class_name']
+        day_of_week = request.form['day_of_week']
+        subject_number = request.form['subject_number']
+        subject_name = request.form['subject_name']
+        cur.execute(
+            "INSERT INTO schedule (class_number, timetable_id, subject_number, day) VALUES (%s)", (class_name,))
+        conn.commit()
+    return redirect(url_for('admin_schedule'))
+
+@app.route('/delete_schedule_row/<id>', methods=['POST', 'GET'])
+def delete_schedule_row(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('DELETE FROM schedule WHERE schedule_id = %s', (id,))
+    conn.commit()
+    return redirect(url_for('admin_schedule'))
 
 
 if __name__ == "__main__":
