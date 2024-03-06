@@ -815,6 +815,8 @@ def admin_schedule():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("SELECT subject_number, subject_name FROM Subject")
     subjects = cur.fetchall()
+    timetable_data = get_timetable_info()
+    classes_data = get_classes()
     cur.execute("""SELECT Schedule.schedule_id, Classes.class_name, Schedule.day, Schedule.subject_number, Subject.subject_name, Teacher.full_name
                 FROM Schedule
                 INNER JOIN Classes ON Schedule.class_number = Classes.class_number
@@ -831,22 +833,38 @@ def admin_schedule():
                 END, Schedule.subject_number""")
     schedule_data = cur.fetchall()
     cur.close()
-    return render_template('admin/admin_schedule.html', schedule_data=schedule_data, subjects=subjects)
+    return render_template('admin/admin_schedule.html', schedule_data=schedule_data, subjects=subjects, classes_data=classes_data, timetable_data=timetable_data)
 
+
+def get_timetable_info():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""
+        SELECT timetable.timetable_id, subject.subject_name, teacher.full_name
+        FROM timetable
+        INNER JOIN subject on timetable.subject_number = subject.subject_number
+        INNER JOIN teacher on timetable.employee_number = teacher.employee_number
+    """)
+    timetable_data = cur.fetchall()
+    return timetable_data
 
 @app.route('/add_schedule_component', methods=['POST'])
 def add_schedule_component():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
-        teacher_id = request.form['teacher_id']
+        timetable_id = request.form['timetable_id']
         class_name = request.form['class_name']
         day_of_week = request.form['day_of_week']
         subject_number = request.form['subject_number']
-        subject_name = request.form['subject_name']
         cur.execute(
-            "INSERT INTO schedule (class_number, timetable_id, subject_number, day) VALUES (%s)", (class_name,))
+            "INSERT INTO schedule (class_number, timetable_id, subject_number, day) VALUES (%s, %s, %s, %s)", (class_name, timetable_id, subject_number, day_of_week))
         conn.commit()
     return redirect(url_for('admin_schedule'))
+
+def get_classes():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT class_number, class_name from classes""")
+    classes_data = cur.fetchall()
+    return classes_data
 
 @app.route('/delete_schedule_row/<id>', methods=['POST', 'GET'])
 def delete_schedule_row(id):

@@ -8,28 +8,24 @@
       <div class="card card-body">
          <form action="{{url_for('add_schedule_component')}}" method="POST">
             <div class="form-group">
-               <input type="text" class="form-control" name="teacher_id" placeholder="Табельний № Вчителя">
-            </div>
-            <div class="form-group">
                <select class="form-control" name="timetable_id" id="timetable_id">
                   {% for row in timetable_data %}
-                     <option value="{{ row[0] }}">{{ row[0] }}</option>
+                     <option value="{{ row[0] }}">{{ row[1] }} - {{ row[2] }}</option>
+                  {% endfor %}
+               </select>
+            </div>
+            <!--<div class="form-group">
+               <input type="text" class="form-control" name="class_name" placeholder="Клас">
+            </div>-->
+            <div class="form-group">
+               <select class="form-control" name="class_name" id="class_name">
+                  {% for row in classes_data %}
+                  <option value="{{ row[0] }}">{{ row[1] }}</option>
                   {% endfor %}
                </select>
             </div>
             <div class="form-group">
-               <label for="subject">Предмет</label>
-               <input type="text" class="form-control" name="subject" id="subject" readonly>
-            </div>
-            <div class="form-group">
-               <label for="teacher">Вчитель</label>
-               <input type="text" class="form-control" name="teacher" id="teacher" readonly>
-            </div>
-            <div class="form-group">
-               <input type="text" class="form-control" name="class_name" placeholder="Клас">
-            </div>
-            <div class="form-group">
-               <label for="day_of_week">День тижня</label>
+               <!--<label for="day_of_week">День тижня</label>-->
                <select class="form-control" name="day_of_week" id="day_of_week">
                   <option value="Monday">Monday</option>
                   <option value="Tuesday">Tuesday</option>
@@ -93,26 +89,5 @@
    </div>
 </div>
 </div>
-<!--
-<script>
-   document.getElementById('timetable_id').addEventListener('change', function () {
-      var selectedTimetableId = this.value;
-
-      // Викликати серверний код за допомогою Ajax для отримання інформації про розклад
-      fetch('/add_schedule_component', {
-         method: 'POST',  // Змінити на POST
-         body: JSON.stringify({ 'timetable_id': selectedTimetableId }),
-         headers: {
-            'Content-Type': 'text/json',
-         },
-      })
-         .then(response => response.json())
-         .then(data => {
-            // Оновити значення полів форми на основі отриманих даних
-            document.getElementById('subject').value = data.timetable_data[0].subject_name;
-            document.getElementById('teacher').value = data.timetable_data[0].full_name;
-         });
-   });
-</script>-->
 
 {% endblock %}
