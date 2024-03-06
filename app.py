@@ -847,6 +847,7 @@ def get_timetable_info():
     timetable_data = cur.fetchall()
     return timetable_data
 
+
 @app.route('/add_schedule_component', methods=['POST'])
 def add_schedule_component():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -855,16 +856,38 @@ def add_schedule_component():
         class_name = request.form['class_name']
         day_of_week = request.form['day_of_week']
         subject_number = request.form['subject_number']
-        cur.execute(
-            "INSERT INTO schedule (class_number, timetable_id, subject_number, day) VALUES (%s, %s, %s, %s)", (class_name, timetable_id, subject_number, day_of_week))
-        conn.commit()
+
+        try:
+            cur.execute(
+                "INSERT INTO schedule (class_number, timetable_id, subject_number, day) VALUES (%s, %s, %s, %s)",
+                (class_name, timetable_id, subject_number, day_of_week)
+            )
+            conn.commit()
+        except psycopg2.DatabaseError as e:
+            error_message = str(e)
+            if 'RAISE EXCEPTION' in error_message:
+                # Обробка повідомлення про конфлікт
+                conn.rollback()
+                return f"Помилка: {error_message}"
+            else:
+                # Інші помилки бази даних
+                conn.rollback()
+                return f"Помилка бази даних: {error_message}"
+        finally:
+            cur.close()
+
+        #cur.execute(
+        #    "INSERT INTO schedule (class_number, timetable_id, subject_number, day) VALUES (%s, %s, %s, %s)", (class_name, timetable_id, subject_number, day_of_week))
+        #conn.commit()
     return redirect(url_for('admin_schedule'))
+
 
 def get_classes():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT class_number, class_name from classes""")
     classes_data = cur.fetchall()
     return classes_data
+
 
 @app.route('/delete_schedule_row/<id>', methods=['POST', 'GET'])
 def delete_schedule_row(id):
