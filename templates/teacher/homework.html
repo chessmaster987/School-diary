@@ -15,10 +15,12 @@
       </thead>
       <tbody>
          {% for teacher in teacher_classes %}
-         <tr>
-            <td>{{ teacher[0] }}</td>
-            <td><button><a href="{{ url_for('add_homework', class_name=teacher[0]) }}">Детальніше</a></button></td>
-         </tr>
+         <form method="post"><tr>
+            <td>{{ teacher[1] }}</td>
+            <td>
+               <button type="submit" name="selected_class" value="{{ teacher[0] }}">Детальніше</button>
+            </td>
+         </form></tr>
          {% endfor %}
       </tbody>
    </table>

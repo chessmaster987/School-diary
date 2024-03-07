@@ -593,8 +593,12 @@ def zvit_teacher():
 def homework():
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    cur.execute("""SELECT DISTINCT classes.class_name 
+    if request.method == 'POST':
+        selected_class = request.form['selected_class']
+        session['selected_class'] = selected_class
+        print(selected_class)
+        return redirect(url_for('add_homework', class_name=selected_class))
+    cur.execute("""SELECT DISTINCT classes.class_number, classes.class_name 
                 FROM teacher 
                 INNER JOIN timetable on teacher.employee_number = timetable.employee_number
                 INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
@@ -603,7 +607,6 @@ def homework():
     teacher_classes = cur.fetchall()
     cur.close()
     return render_template('teacher/homework.html', teacher_classes=teacher_classes)
-
 
 def get_teacher_subjects():
     username = session.get('username', None)
@@ -633,21 +636,28 @@ def add_homework():
             """SELECT subject_number FROM subject WHERE subject_name = %s""", (teacher_subject_pre,))
         teacher_subject = cur.fetchone()[0]
         print(teacher_subject)
+        cur.execute("""SELECT schedule_id 
+                    FROM schedule 
+                    INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                    INNER JOIN subject on timetable.subject_number = subject.subject_number
+                    INNER JOIN classes on schedule.class_number = classes.class_number
+                    WHERE classes.class_number = %s and subject.subject_number = %s""", (session['selected_class'], teacher_subject))
+        lesson_id_data = cur.fetchall()
         homework_description = request.form['homework_description']
 
         cur.execute(
-            "INSERT INTO homework (homework_text, lesson_id, date) VALUES (%s,%s,%s)", (homework_description, teacher_subject, date))
+            "INSERT INTO homework (homework_text, lesson_id, date) VALUES (%s,%s,%s)", (homework_description, lesson_id_data, date))
         conn.commit()
         return redirect(url_for('add_homework'))
 
-    class_name = request.args.get('class_name', None)
     cur.execute("""SELECT homework.homework_number, homework.date, subject.subject_name, homework.homework_text
                 FROM homework
                 INNER JOIN schedule on homework.lesson_id = schedule.schedule_id
                 INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
                 INNER JOIN subject on timetable.subject_number = subject.subject_number
                 INNER JOIN teacher on timetable.employee_number = teacher.employee_number
-                WHERE teacher.login = %s""", (username,))
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                WHERE teacher.login = %s and classes.class_number = %s""", (username, session['selected_class']))
     teacher_homework = cur.fetchall()
     cur.close()
     teacher_subjects = get_teacher_subjects()
@@ -868,17 +878,19 @@ def add_schedule_component():
             if 'RAISE EXCEPTION' in error_message:
                 # Обробка повідомлення про конфлікт
                 conn.rollback()
-                return f"Помилка: {error_message}"
+                # return f"Помилка: {error_message}"
+                return "Цей вчитель вже зайнятий на обраній парі у обраний день"
             else:
                 # Інші помилки бази даних
                 conn.rollback()
-                return f"Помилка бази даних: {error_message}"
+                #return f"Помилка бази даних: {error_message}"
+                return "Цей вчитель вже зайнятий на обраній парі у обраний день"
         finally:
             cur.close()
 
-        #cur.execute(
+        # cur.execute(
         #    "INSERT INTO schedule (class_number, timetable_id, subject_number, day) VALUES (%s, %s, %s, %s)", (class_name, timetable_id, subject_number, day_of_week))
-        #conn.commit()
+        # conn.commit()
     return redirect(url_for('admin_schedule'))
 
 
