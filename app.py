@@ -495,7 +495,7 @@ def my_teachers():
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    cur.execute("""SELECT teacher.full_name, subject.subject_name
+    cur.execute("""SELECT DISTINCT teacher.full_name, subject.subject_name
                 FROM teacher
                 INNER JOIN timetable on teacher.employee_number = timetable.employee_number
                 INNER JOIN subject on timetable.subject_number = subject.subject_number
@@ -608,15 +608,18 @@ def homework():
     cur.close()
     return render_template('teacher/homework.html', teacher_classes=teacher_classes)
 
+
 def get_teacher_subjects():
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""
-        SELECT subject.subject_name
+        SELECT DISTINCT subject.subject_name
         FROM teacher
         INNER JOIN timetable on teacher.employee_number = timetable.employee_number
         INNER JOIN subject on timetable.subject_number = subject.subject_number
-        WHERE teacher.login = %s """, (username,))
+		INNER JOIN schedule on timetable.timetable_id = schedule.timetable_id
+		INNER JOIN classes on schedule.class_number = classes.class_number
+		WHERE teacher.login = %s and classes.class_number = %s""", (username, session['selected_class']))
 
     subjects = [row[0] for row in cur.fetchall()]
     cur.close()
@@ -642,7 +645,7 @@ def add_homework():
                     INNER JOIN subject on timetable.subject_number = subject.subject_number
                     INNER JOIN classes on schedule.class_number = classes.class_number
                     WHERE classes.class_number = %s and subject.subject_number = %s""", (session['selected_class'], teacher_subject))
-        lesson_id_data = cur.fetchall()
+        lesson_id_data = cur.fetchone()[0]
         homework_description = request.form['homework_description']
 
         cur.execute(
@@ -883,7 +886,7 @@ def add_schedule_component():
             else:
                 # Інші помилки бази даних
                 conn.rollback()
-                #return f"Помилка бази даних: {error_message}"
+                # return f"Помилка бази даних: {error_message}"
                 return "Цей вчитель вже зайнятий на обраній парі у обраний день"
         finally:
             cur.close()
