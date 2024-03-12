@@ -546,11 +546,13 @@ def teacher_classes():
     return render_template('teacher/teacher_classes.html', teacher_classes=teacher_classes)
 
 
-@app.route('/teacher_classes_detail/<class_name>', methods=['GET'])
+@app.route('/teacher_classes_detail/<class_name>', methods=['GET', 'POST'])
 def teacher_classes_detail(class_name):
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
+    selected_student = request.args.get('selected_student')
+    session['selected_student'] = selected_student
+    print(session['selected_student'])
     cur.execute("""SELECT DISTINCT student.login, student.full_name 
                 FROM teacher 
                 INNER JOIN timetable on teacher.employee_number = timetable.employee_number
@@ -911,6 +913,26 @@ def delete_schedule_row(id):
     conn.commit()
     return redirect(url_for('admin_schedule'))
 
+
+@app.route('/zvit_uchni_avg_grade/<selected_student>', methods=['POST', 'GET'])
+def zvit_uchni_avg_grade(selected_student):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""WITH summary_data AS (
+                SELECT grade.login, subject.subject_name,
+                    AVG(grade) AS avg_grade
+                  FROM Grade
+                	INNER JOIN schedule on grade.lesson_id = schedule.schedule_id
+                	INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                	INNER JOIN subject on timetable.subject_number = subject.subject_number
+                  GROUP BY login, subject_name
+                )
+                SELECT subject_name, avg_grade
+                FROM
+                  summary_data
+                WHERE login = %s""", (selected_student,))
+    session['selected_student'] = selected_student
+    avg_grades = cur.fetchall()
+    return render_template('teacher/zvit_uchni_avg_grade.html', avg_grades=avg_grades)
 
 if __name__ == "__main__":
     app.run(debug=True)

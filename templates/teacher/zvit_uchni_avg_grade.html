@@ -1,7 +1,7 @@
 {% extends "layout_teacher.html" %}
 {% block body %}
 <div class="teacher">
-   <h3>Дані про учнів</h3>
+   <h3>Звіт по оцінкам учня {{session['selected_student']}}</h3>
 </div>
 <div class="teacher">
 </div>
@@ -9,16 +9,15 @@
    <table id="example" class="table table-striped table-bordered" style="width:100%">
       <thead>
          <tr>
-            <td>Логін учня</td>
-            <td>ПІБ учня</td>
+            <td>Предмет</td>
+            <td>Середня оцінка</td>
          </tr>
       </thead>
       <tbody>
-         {% for teacher in teacher_classes_detail %}
+         {% for teacher in avg_grades %}
          <tr>
             <td>{{ teacher[0] }}</td>
             <td>{{ teacher[1] }}</td>
-            <td><a href="{{ url_for('zvit_uchni_avg_grade', selected_student=teacher[0]) }}">Отримати інформацію</a></td>
          </tr>
          {% endfor %}
       </tbody>
