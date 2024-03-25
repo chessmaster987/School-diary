@@ -11,24 +11,23 @@ app.secret_key = "vlad"
 
 DB_HOST = "localhost"
 DB_NAME = "Bazu Danych"
-DB_USER = "postgres"
-DB_PASS = "25082003"
+DB_USER = "connect_user"
+DB_PASS = "connect_user"
 
-conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
-                        password=DB_PASS, host=DB_HOST)
+ADMIN_USER = 'administrator'
+ADMIN_PASSWORD = 'administrator'
+
+TEACHER_USER = 'teacher'
+TEACHER_PASSWORD = 'teacher'
+
+STUDENT_USER = 'student'
+STUDENT_PASSWORD = 'student'
 
 
-# @app.route("/main", methods=['GET', 'POST'])
-# def main():
-#    if request.method == 'POST':
-#        action = request.form.get('action')
-#        if action == 'crud':
-#            return redirect('/crud')
-#        elif action == 'logout':
-#            return redirect('/logout')
-#
-#    return render_template('main.html')
-
+def connect(user, password):
+    conn = psycopg2.connect(dbname=DB_NAME, user=user,
+                            password=password, host=DB_HOST)
+    return conn
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -36,7 +35,11 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
+        conn = connect(DB_USER, DB_PASS) 
         cur = conn.cursor()
+        cur.execute("""SELECT * from current_user""")
+        data = cur.fetchall()
+        print(data)
         cur.execute(
             "SELECT username FROM login WHERE username = %s AND password = %s", (username, password))
         user = cur.fetchone()
@@ -47,9 +50,26 @@ def login():
             role = cur.fetchone()
 
             if role and role[0] == 'admin':
+                cur.close()  # Закриття поточного підключення
+                conn.close()
+                conn = connect(ADMIN_USER, ADMIN_PASSWORD)
+                cur = conn.cursor()
+                cur.execute("""SELECT * from current_user""")
+                data = cur.fetchall()
+                print(data)
                 session['username'] = username
                 return redirect('/admin')
             elif role and role[0] == 'teacher':
+                cur.close()  # Закриття поточного підключення
+                conn.close()
+                conn = connect(TEACHER_USER, TEACHER_PASSWORD)
+                cur = conn.cursor()
+                cur.execute("SET SESSION AUTHORIZATION 'administrator';")
+                f = cur.fetchall()
+                print(f)
+                cur.execute("""SELECT * from current_user""")
+                data = cur.fetchall()
+                print(data)
                 session['username'] = username
                 return redirect('/teacher')
             elif role and role[0] == 'student':
@@ -73,6 +93,7 @@ def admin():
 
 @app.route('/info_student', methods=['GET', 'POST'])
 def info_student():
+    conn = connect(TEACHER_USER, TEACHER_PASSWORD)
     cur = conn.cursor()
     cur.execute("""SELECT student.login, login.password, student.full_name, classes.class_name FROM student 
                 INNER JOIN classes ON classes.class_number = student.class_number
@@ -933,6 +954,7 @@ def zvit_uchni_avg_grade(selected_student):
     session['selected_student'] = selected_student
     avg_grades = cur.fetchall()
     return render_template('teacher/zvit_uchni_avg_grade.html', avg_grades=avg_grades)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
