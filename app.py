@@ -11,23 +11,24 @@ app.secret_key = "vlad"
 
 DB_HOST = "localhost"
 DB_NAME = "Bazu Danych"
-DB_USER = "connect_user"
-DB_PASS = "connect_user"
+DB_USER = "postgres"
+DB_PASS = "25082003"
 
-ADMIN_USER = 'administrator'
-ADMIN_PASSWORD = 'administrator'
-
-TEACHER_USER = 'teacher'
-TEACHER_PASSWORD = 'teacher'
-
-STUDENT_USER = 'student'
-STUDENT_PASSWORD = 'student'
+conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
+                        password=DB_PASS, host=DB_HOST)
 
 
-def connect(user, password):
-    conn = psycopg2.connect(dbname=DB_NAME, user=user,
-                            password=password, host=DB_HOST)
-    return conn
+# @app.route("/main", methods=['GET', 'POST'])
+# def main():
+#    if request.method == 'POST':
+#        action = request.form.get('action')
+#        if action == 'crud':
+#            return redirect('/crud')
+#        elif action == 'logout':
+#            return redirect('/logout')
+#
+#    return render_template('main.html')
+
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -35,11 +36,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        conn = connect(DB_USER, DB_PASS) 
         cur = conn.cursor()
-        cur.execute("""SELECT * from current_user""")
-        data = cur.fetchall()
-        print(data)
         cur.execute(
             "SELECT username FROM login WHERE username = %s AND password = %s", (username, password))
         user = cur.fetchone()
@@ -50,26 +47,9 @@ def login():
             role = cur.fetchone()
 
             if role and role[0] == 'admin':
-                cur.close()  # Закриття поточного підключення
-                conn.close()
-                conn = connect(ADMIN_USER, ADMIN_PASSWORD)
-                cur = conn.cursor()
-                cur.execute("""SELECT * from current_user""")
-                data = cur.fetchall()
-                print(data)
                 session['username'] = username
                 return redirect('/admin')
             elif role and role[0] == 'teacher':
-                cur.close()  # Закриття поточного підключення
-                conn.close()
-                conn = connect(TEACHER_USER, TEACHER_PASSWORD)
-                cur = conn.cursor()
-                cur.execute("SET SESSION AUTHORIZATION 'administrator';")
-                f = cur.fetchall()
-                print(f)
-                cur.execute("""SELECT * from current_user""")
-                data = cur.fetchall()
-                print(data)
                 session['username'] = username
                 return redirect('/teacher')
             elif role and role[0] == 'student':
@@ -93,7 +73,6 @@ def admin():
 
 @app.route('/info_student', methods=['GET', 'POST'])
 def info_student():
-    conn = connect(TEACHER_USER, TEACHER_PASSWORD)
     cur = conn.cursor()
     cur.execute("""SELECT student.login, login.password, student.full_name, classes.class_name FROM student 
                 INNER JOIN classes ON classes.class_number = student.class_number
@@ -938,21 +917,27 @@ def delete_schedule_row(id):
 @app.route('/zvit_uchni_avg_grade/<selected_student>', methods=['POST', 'GET'])
 def zvit_uchni_avg_grade(selected_student):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""WITH summary_data AS (
+    session['selected_student'] = selected_student
+    avg_grades = []
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        cur.execute("""WITH summary_data AS (
                 SELECT grade.login, subject.subject_name,
                     AVG(grade) AS avg_grade
                   FROM Grade
-                	INNER JOIN schedule on grade.lesson_id = schedule.schedule_id
+	                INNER JOIN schedule on grade.lesson_id = schedule.schedule_id
                 	INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
                 	INNER JOIN subject on timetable.subject_number = subject.subject_number
+				  WHERE date >= DATE %s AND date <= %s
                   GROUP BY login, subject_name
                 )
                 SELECT subject_name, avg_grade
                 FROM
                   summary_data
-                WHERE login = %s""", (selected_student,))
-    session['selected_student'] = selected_student
-    avg_grades = cur.fetchall()
+                WHERE login = %s""", (start_date, end_date, selected_student))
+        session['selected_student'] = selected_student
+        avg_grades = cur.fetchall()
     return render_template('teacher/zvit_uchni_avg_grade.html', avg_grades=avg_grades)
 
 
