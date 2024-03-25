@@ -671,6 +671,35 @@ def add_homework():
 ################################
 
 
+@app.route('/edit_homework/<id>', methods=['GET', 'POST'])
+def edit_homework(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""select homework_number, homework_text from homework where homework_number = %s""", (id,))
+    homework_data = cur.fetchall()
+    print(homework_data)
+    return render_template('teacher/edit_homework.html', homework_data=homework_data[0])
+
+
+@app.route('/update_homework/<id>', methods=['POST', 'GET'])
+def update_homework(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        homework_description = request.form['homework_description']
+        cur.execute("""
+            UPDATE homework
+            SET homework_text = %s
+            WHERE homework_number = %s
+        """, (homework_description, id))
+        conn.commit()
+        return redirect(url_for('add_homework'))
+
+@app.route('/delete_homework/<id>', methods=['GET', 'POST'])
+def delete_homework(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('DELETE FROM homework WHERE homework_number = %s', (id,))
+    conn.commit()
+    return redirect(url_for('add_homework'))
+
 @app.route('/teacher_notif', methods=['GET'])
 def teacher_notif():
     return render_template('teacher/notif_event.html')
@@ -939,6 +968,10 @@ def zvit_uchni_avg_grade(selected_student):
         session['selected_student'] = selected_student
         avg_grades = cur.fetchall()
     return render_template('teacher/zvit_uchni_avg_grade.html', avg_grades=avg_grades)
+
+@app.route('/teaching_lesson', methods=['POST', 'GET'])
+def teaching_lesson():
+    return render_template('teacher/teaching_lesson.html')
 
 
 if __name__ == "__main__":

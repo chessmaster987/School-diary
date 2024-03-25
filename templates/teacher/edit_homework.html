@@ -3,25 +3,10 @@
 <div class="teacher">
    <div class="col-md-4 offset-md-4">
       <div class="card card-body">
-         <form action="{{ url_for('update_homework', id=homework.homework_number) }}" method="POST">
-           
-           
-           
-           
-           
-           
-           <!--- ТРЕБА ЗМІНИТИ ПІД СВОЇ ПОТРЕБИ!!!!! -->
-           
-           
-           
-           
-           
+         <form action="{{ url_for('update_homework', id=homework_data.homework_number) }}" method="POST">
             <div class="form-group">
-               <input type="text" name="class_number" value="{{classes.class_number}}" class="form-control" readonly>
-            </div>
-
-            <div class="form-group">
-               <input type="text" name="class_name" value="{{classes.class_name}}" class="form-control">
+               <label for="homework_description">Змініть опис ДЗ:</label>
+               <input type="text" class="form-control" name="homework_description" placeholder="Опис ДЗ" value="{{ homework_data.homework_text }}">
             </div>
             <div class="form-group">
                <button type="submit" class="btn btn-primary btn-block">
