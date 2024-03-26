@@ -969,9 +969,48 @@ def zvit_uchni_avg_grade(selected_student):
         avg_grades = cur.fetchall()
     return render_template('teacher/zvit_uchni_avg_grade.html', avg_grades=avg_grades)
 
-@app.route('/teaching_lesson', methods=['POST', 'GET'])
-def teaching_lesson():
-    return render_template('teacher/teaching_lesson.html')
+
+@app.route('/teaching_lesson_class_choice', methods=['POST', 'GET'])
+def teaching_lesson_class_choice():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    cur.execute("""SELECT DISTINCT classes.class_name 
+                FROM teacher 
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                WHERE teacher.login = %s""", (username,))
+    teacher_classes = cur.fetchall()
+    cur.close()
+    return render_template('teacher/teaching_lesson_class_choice.html', teacher_classes=teacher_classes)
+
+@app.route('/teacher_lesson/<class_name>', methods=['POST', 'GET'])
+def teacher_lesson(class_name):
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    return render_template('teacher/teacher_lesson.html')
+
+'''
+@app.route('/teacher_classes_detail/<class_name>', methods=['GET', 'POST'])
+def teacher_classes_detail(class_name):
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    selected_student = request.args.get('selected_student')
+    session['selected_student'] = selected_student
+    print(session['selected_student'])
+    cur.execute("""SELECT DISTINCT student.login, student.full_name 
+                FROM teacher 
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                INNER JOIN student on classes.class_number = student.class_number
+                WHERE teacher.login = %s AND classes.class_name = %s""", (username, class_name))
+    teacher_classes_detail = cur.fetchall()
+    cur.close()
+    return render_template('teacher/teacher_classes_detail.html', teacher_classes_detail=teacher_classes_detail)
+'''
 
 
 if __name__ == "__main__":
