@@ -451,7 +451,17 @@ def delete_timetable(id):
 def student():
     username = session.get('username', None)
     print(session.get('username', None))
-    return render_template('student/student.html', username=username)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT s.full_name AS student_name, c.class_name, t.full_name AS class_teacher
+                FROM Student s
+                JOIN Classes c ON s.class_number = c.class_number
+                INNER JOIN Teacher t ON c.class_number = t.class_number
+                INNER JOIN Timetable tt ON t.employee_number = tt.employee_number
+                INNER JOIN Subject sub ON tt.subject_number = sub.subject_number
+                WHERE s.login = %s
+                GROUP BY s.full_name, c.class_name, t.full_name;""", (username,))
+    student_info = cur.fetchone()
+    return render_template('student/student.html', username=username, student_info=student_info)
 
 
 @app.route('/info_homework', methods=['GET'])

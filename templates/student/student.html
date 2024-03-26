@@ -1,18 +1,3 @@
-<!--<!DOCTYPE html>
-<html lang="en">
-
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>STUDENT</title>
-</head>
-
-<body>
-   <h1>STUDENT! Привіт, {{ username }}</h1>
-</body>
-
-</html>-->
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -22,6 +7,23 @@
    <title>STUDENT</title>
    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
       integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+   <style>
+      body {
+         text-align: center;
+      }
+   
+      .container {
+         margin-top: 50px;
+      }
+   
+      .info-box {
+         text-align: left;
+         padding: 20px;
+         border: 1px solid #ccc;
+         border-radius: 5px;
+         margin-bottom: 20px;
+      }
+   </style>
 </head>
 
 <body>
@@ -60,7 +62,15 @@
       </div>
    </nav>
 
-   <h1>STUDENT! Привіт, {{ username }} </h1>
+   <div class="container">
+      <h1>STUDENT! Привіт, {{ username }} </h1>
+   
+      <div class="info-box">
+         <p><strong>Student Name:</strong> {{ student_info.student_name }}</p>
+         <p><strong>Class Name:</strong> {{ student_info.class_name }}</p>
+         <p><strong>Class Teacher:</strong> {{ student_info.class_teacher }}</p>
+      </div>
+   </div>
 
    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
       integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
