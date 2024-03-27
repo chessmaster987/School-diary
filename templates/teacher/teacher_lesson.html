@@ -12,7 +12,7 @@
                 <label for="lesson_id">Оберіть урок</label>
                 <select class="form-control" name="lesson_id" id="lesson_id">
                     {% for lesson in lesson_id %}
-                    <option value="{{ lesson[0] }}">{{ lesson[1]}}-{{lesson[2]}}-{{lesson[3]}}</option>
+                        <option value="{{ lesson[0] }}">{{ lesson[1]}}-{{lesson[2]}}-{{lesson[3]}}</option>
                     {% endfor %}
                 </select>
             </div>

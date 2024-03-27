@@ -1016,6 +1016,7 @@ def teacher_lesson(class_name):
             cur.execute("""INSERT INTO Grade (date, login, lesson_id, grade, grade_type, presence_mark) 
                     VALUES (%s, %s, %s, %s, %s, %s) """, (start_date, student_name, lesson_id, grade_number, grade_status, presence_mark))
             conn.commit()
+            return redirect(url_for('teaching_lesson_class_choice'))
         except psycopg2.DatabaseError as e:
             error_message = str(e)
             if 'RAISE EXCEPTION' in error_message:
@@ -1030,23 +1031,19 @@ def teacher_lesson(class_name):
             cur.close()
     return render_template('teacher/teacher_lesson.html', student_data=student_data, subjects=subjects, lesson_id=lesson_id, class_name=class_name)
 
-
 def get_lesson_id(class_name):
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(
         """SELECT class_number from classes where class_name = %s""", (class_name,))
     class_number = cur.fetchone()[0]
-    print(class_number)
-    session['class_number'] = class_number
-    print(session['class_number'])
     cur.execute("""SELECT schedule.schedule_id, subject.subject_name, schedule.subject_number, schedule.day
                 from schedule
                 INNER JOIN classes on schedule.class_number = classes.class_number
                 INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
                 INNER JOIN subject on timetable.subject_number = subject.subject_number
                 INNER JOIN teacher on timetable.employee_number = teacher.employee_number
-                WHERE classes.class_number = %s and teacher.login = %s""", (session['class_number'], username))
+                WHERE classes.class_number = %s and teacher.login = %s""", (class_number, username))
     lesson_id = cur.fetchall()
     return lesson_id
 
@@ -1058,9 +1055,6 @@ def get_students(class_name):
                 WHERE classes.class_name =  %s""", (class_name,))
     students = cur.fetchall()
     return students
-
-
-
 
 '''
 @app.route('/academic_performance_ranking', methods=['GET', 'POST'])
