@@ -11,6 +11,7 @@
                <td>Дата</td>
                <td>Предмет</td>
                <td>Домашнє завдання</td>
+               <td>Виконано</td> <!-- Додали новий стовпчик -->
             </tr>
          </thead>
          <tbody>
@@ -19,6 +20,10 @@
                <td>{{ homework[0] }}</td>
                <td>{{ homework[1] }}</td>
                <td>{{ homework[2] }}</td>
+               <td>
+                  <input type="checkbox" id="todo{{ loop.index }}" name="todo{{ loop.index }}" value="{{ loop.index }}">
+                  <label for="todo{{ loop.index }}"></label>
+               </td>
             </tr>
             {% endfor %}
          </tbody>
@@ -26,5 +31,19 @@
    </div>
 </div>
 </div>
+
+<script>
+   // Функція для закреслення рядків та зміни кольору при відмічанні чекбокса
+   $('input[type="checkbox"]').change(function () {
+      var row = $(this).closest('tr');
+      if ($(this).is(":checked")) {
+         row.css('text-decoration', 'line-through');
+         row.css('color', 'lightgray');
+      } else {
+         row.css('text-decoration', 'none');
+         row.css('color', 'black');
+      }
+   });
+</script>
 
 {% endblock %}

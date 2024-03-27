@@ -1022,6 +1022,10 @@ def teacher_classes_detail(class_name):
     return render_template('teacher/teacher_classes_detail.html', teacher_classes_detail=teacher_classes_detail)
 '''
 
+'''
+@app.route('/academic_performance_ranking', methods=['GET', 'POST'])
+def academic_performance_ranking():'''
+
 
 if __name__ == "__main__":
     app.run(debug=True)
