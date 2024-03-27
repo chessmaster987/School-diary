@@ -208,7 +208,6 @@ def add_class():
         cur.execute(
             "INSERT INTO classes (class_name) VALUES (%s)", (class_name,))
         conn.commit()
-        flash('Class Added successfully')
         return redirect(url_for('info_classes'))
 
 
@@ -684,7 +683,8 @@ def add_homework():
 @app.route('/edit_homework/<id>', methods=['GET', 'POST'])
 def edit_homework(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""select homework_number, homework_text from homework where homework_number = %s""", (id,))
+    cur.execute(
+        """select homework_number, homework_text from homework where homework_number = %s""", (id,))
     homework_data = cur.fetchall()
     print(homework_data)
     return render_template('teacher/edit_homework.html', homework_data=homework_data[0])
@@ -703,12 +703,14 @@ def update_homework(id):
         conn.commit()
         return redirect(url_for('add_homework'))
 
+
 @app.route('/delete_homework/<id>', methods=['GET', 'POST'])
 def delete_homework(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('DELETE FROM homework WHERE homework_number = %s', (id,))
     conn.commit()
     return redirect(url_for('add_homework'))
+
 
 @app.route('/teacher_notif', methods=['GET'])
 def teacher_notif():
@@ -995,32 +997,70 @@ def teaching_lesson_class_choice():
     cur.close()
     return render_template('teacher/teaching_lesson_class_choice.html', teacher_classes=teacher_classes)
 
+
 @app.route('/teacher_lesson/<class_name>', methods=['POST', 'GET'])
 def teacher_lesson(class_name):
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    student_data = get_students(class_name)
+    subjects = get_teacher_subjects()
+    lesson_id = get_lesson_id(class_name)
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        lesson_id = request.form['lesson_id']
+        student_name = request.form['student_name']
+        grade_status = request.form['grade_status']
+        grade_number = request.form['grade_number']
+        presence_mark = request.form['presence_mark']
+        try:
+            cur.execute("""INSERT INTO Grade (date, login, lesson_id, grade, grade_type, presence_mark) 
+                    VALUES (%s, %s, %s, %s, %s, %s) """, (start_date, student_name, lesson_id, grade_number, grade_status, presence_mark))
+            conn.commit()
+        except psycopg2.DatabaseError as e:
+            error_message = str(e)
+            if 'RAISE EXCEPTION' in error_message:
+                # Обробка повідомлення про конфлікт
+                conn.rollback()
+                return f"Помилка: {error_message}"
+            else:
+                # Інші помилки бази даних
+                conn.rollback()
+                return f"Помилка бази даних: {error_message}"
+        finally:
+            cur.close()
+    return render_template('teacher/teacher_lesson.html', student_data=student_data, subjects=subjects, lesson_id=lesson_id, class_name=class_name)
 
-    return render_template('teacher/teacher_lesson.html')
 
-'''
-@app.route('/teacher_classes_detail/<class_name>', methods=['GET', 'POST'])
-def teacher_classes_detail(class_name):
+def get_lesson_id(class_name):
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    selected_student = request.args.get('selected_student')
-    session['selected_student'] = selected_student
-    print(session['selected_student'])
-    cur.execute("""SELECT DISTINCT student.login, student.full_name 
-                FROM teacher 
-                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
-                INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
+    cur.execute(
+        """SELECT class_number from classes where class_name = %s""", (class_name,))
+    class_number = cur.fetchone()[0]
+    print(class_number)
+    session['class_number'] = class_number
+    print(session['class_number'])
+    cur.execute("""SELECT schedule.schedule_id, subject.subject_name, schedule.subject_number, schedule.day
+                from schedule
                 INNER JOIN classes on schedule.class_number = classes.class_number
-                INNER JOIN student on classes.class_number = student.class_number
-                WHERE teacher.login = %s AND classes.class_name = %s""", (username, class_name))
-    teacher_classes_detail = cur.fetchall()
-    cur.close()
-    return render_template('teacher/teacher_classes_detail.html', teacher_classes_detail=teacher_classes_detail)
-'''
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                INNER JOIN teacher on timetable.employee_number = teacher.employee_number
+                WHERE classes.class_number = %s and teacher.login = %s""", (session['class_number'], username))
+    lesson_id = cur.fetchall()
+    return lesson_id
+
+
+def get_students(class_name):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT login FROM student 
+                INNER JOIN classes on student.class_number = classes.class_number
+                WHERE classes.class_name =  %s""", (class_name,))
+    students = cur.fetchall()
+    return students
+
+
+
 
 '''
 @app.route('/academic_performance_ranking', methods=['GET', 'POST'])

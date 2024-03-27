@@ -1,32 +1,65 @@
 {% extends "layout_teacher.html" %}
 {% block body %}
-<div class="teacher">
-    <h3>Оберіть клас та дію</h3>
+<div class="teacher container-fluid">
+    <h3>Виставлення оцінки та відвідуваності заняття</h3>
 </div>
-<div class="teacher">
-    <div>
-        <div class="col-md-8">
-            <table id="example" class="table table-striped table-bordered" style="width:100%">
-                <thead>
-                    <tr>
-                        <td>Клас</td>
-                        <td>Обрати дію</td>
-                        <td>Обрати дію</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for teacher in teacher_classes %}
-                    <tr>
-                        <td>{{ teacher[0] }}</td>
-                        <td><a href="{{ url_for('teacher_lesson', class_name=teacher[0]) }}">Зареєструвати нове
-                                заняття</a></td>
-                        <td><a href="#">Відкрити перелік проведених занять</a></td>
-                    </tr>
+<div class="col-md-8 container-fluid">
+    <div class="card card-body">
+        <form action="{{url_for('teacher_lesson', class_name=class_name)}}" method="POST" class="form-inline">
+            <input type="text" id="start_date" name="start_date" class="form-control mb-2 mr-sm-2 col-md-3"
+                placeholder="Дата">
+            <div class="form-group mb-2 mr-sm-2 col-md-3">
+                <label for="lesson_id">Оберіть урок</label>
+                <select class="form-control" name="lesson_id" id="lesson_id">
+                    {% for lesson in lesson_id %}
+                    <option value="{{ lesson[0] }}">{{ lesson[1]}}-{{lesson[2]}}-{{lesson[3]}}</option>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                </select>
+            </div>
+            <div class="form-group mb-2 mr-sm-2 col-md-3">
+                <label for="student_name">Учень</label>
+                <select class="form-control" name="student_name" id="student_name">
+                    {% for student in student_data %}
+                    <option value="{{ student[0]}}">{{ student[0] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-2 mr-sm-2 col-md-3">
+                <label for="grade_status">Тип оцінки</label>
+                <select class="form-control" name="grade_status" id="grade_status">
+                    <option value="homework">homework</option>
+                    <option value="test">test</option>
+                    <option value="exam">exam</option>
+                </select>
+            </div>
+            <div class="form-group mb-2 mr-sm-2 col-md-2">
+                <label for="grade_number">Номінал оцінки</label>
+                <select class="form-control" name="grade_number" id="grade_number">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+            </div>
+            <div class="form-group mb-2 mr-sm-2 col-md-2">
+                <label for="presence_mark">Відмітка присутності</label>
+                <select class="form-control" name="presence_mark" id="presence_mark">
+                    <option value="YES">YES</option>
+                    <option value="NO">NO</option>
+                </select>
+            </div>
+            <button class="btn btn-primary">
+                Save
+            </button>
+        </form>
     </div>
 </div>
-
 {% endblock %}
