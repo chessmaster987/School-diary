@@ -1031,6 +1031,7 @@ def teacher_lesson(class_name):
             cur.close()
     return render_template('teacher/teacher_lesson.html', student_data=student_data, subjects=subjects, lesson_id=lesson_id, class_name=class_name)
 
+
 def get_lesson_id(class_name):
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -1055,6 +1056,60 @@ def get_students(class_name):
                 WHERE classes.class_name =  %s""", (class_name,))
     students = cur.fetchall()
     return students
+
+
+@app.route('/show_teacher_lessons/<class_name>', methods=['POST', 'GET'])
+def show_teacher_lessons(class_name):
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(
+        """SELECT class_number from classes where class_name = %s""", (class_name,))
+    class_number = cur.fetchone()[0]
+    session['class_name'] = class_name
+    cur.execute("""select grade.grade_number, grade.date, grade.login, grade.lesson_id,grade.grade, grade_type, grade.presence_mark
+                from grade
+                INNER JOIN student on grade.login = student.login
+                INNER JOIN classes on student.class_number = classes.class_number
+                INNER JOIN schedule on grade.lesson_id = schedule.schedule_id
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN teacher on timetable.employee_number = teacher.employee_number
+                WHERE classes.class_number = %s and teacher.login = %s""", (class_number, username))
+    show_lessons = cur.fetchall()
+    return render_template('teacher/show_teacher_lessons.html', show_lessons=show_lessons)
+
+
+@app.route('/delete_show_lessons/<id>', methods=['POST', 'GET'])
+def delete_show_lessons(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('DELETE FROM grade WHERE grade_number = %s', (id,))
+    conn.commit()
+    return redirect(url_for('show_teacher_lessons', class_name=session['class_name']))
+
+
+@app.route('/edit_show_lessons/<id>', methods=['POST', 'GET'])
+def edit_show_lessons(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""select grade.grade_number, grade.grade, grade.grade_type, grade.presence_mark
+                from grade
+                where grade.grade_number = %s""", (id,))
+    grade = cur.fetchone()
+    return render_template('teacher/edit_show_lessons.html', grade=grade)
+
+@app.route('/update_show_lessons/<id>', methods=['POST', 'GET'])
+def update_show_lessons(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    if request.method == 'POST':
+        grade = request.form['grade']
+        grade_type = request.form['grade_type']
+        presence_mark = request.form['presence_mark']
+        cur.execute("""
+            UPDATE grade
+            SET grade = %s, grade_type = %s, presence_mark = %s
+            WHERE grade_number = %s
+        """, (grade, grade_type, presence_mark, id))
+        conn.commit()
+    return redirect(url_for('show_teacher_lessons', class_name=session['class_name']))
+
 
 '''
 @app.route('/academic_performance_ranking', methods=['GET', 'POST'])

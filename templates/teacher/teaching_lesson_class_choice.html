@@ -19,7 +19,7 @@
                     <tr>
                         <td>{{ teacher[0] }}</td>
                         <td><a href="{{ url_for('teacher_lesson', class_name=teacher[0]) }}">Зареєструвати нове заняття</a></td>
-                        <td><a href="#">Відкрити перелік проведених занять</a></td>
+                        <td><a href="{{url_for('show_teacher_lessons', class_name=teacher[0])}}">Відкрити перелік проведених занять</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
