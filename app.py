@@ -1095,6 +1095,7 @@ def edit_show_lessons(id):
     grade = cur.fetchone()
     return render_template('teacher/edit_show_lessons.html', grade=grade)
 
+
 @app.route('/update_show_lessons/<id>', methods=['POST', 'GET'])
 def update_show_lessons(id):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -1114,6 +1115,33 @@ def update_show_lessons(id):
 '''
 @app.route('/academic_performance_ranking', methods=['GET', 'POST'])
 def academic_performance_ranking():'''
+
+
+@app.route('/adsence_ranking', methods=['GET', 'POST'])
+def absence_ranking():
+    username = session.get('username', None)
+    presence_data = []
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT DISTINCT classes.class_number, classes.class_name 
+                FROM teacher 
+                INNER JOIN timetable on teacher.employee_number = timetable.employee_number
+                INNER JOIN schedule on timetable.employee_number = schedule.timetable_id
+                INNER JOIN classes on schedule.class_number = classes.class_number
+                WHERE teacher.login = %s""", (username,))
+    class_data = cur.fetchall()
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        class_name = request.form['class_name']
+        cur.execute("""select student.login, COUNT(grade.presence_mark)
+                    from grade
+	                INNER JOIN student on grade.login = student.login
+					INNER JOIN schedule on grade.lesson_id = schedule.schedule_id
+					INNER JOIN classes on schedule.class_number = classes.class_number
+				  WHERE date >= DATE %s AND date <= %s AND classes.class_number = %s
+                  GROUP BY student.login""", (start_date, end_date, class_name))
+        presence_data = cur.fetchall()
+    return render_template('teacher/absence_ranking.html', class_data=class_data, presence_data=presence_data)
 
 
 if __name__ == "__main__":
