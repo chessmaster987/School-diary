@@ -1143,6 +1143,28 @@ def absence_ranking():
         presence_data = cur.fetchall()
     return render_template('teacher/absence_ranking.html', class_data=class_data, presence_data=presence_data)
 
+#ОЦІНКИ УЧНЯ!!!
+@app.route('/student_grades', methods=['GET', 'POST'])
+def student_grades():
+    username = session.get('username', None) 
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""select grade.date, subject.subject_name, grade.grade, grade.grade_type
+                from grade
+                INNER JOIN schedule on grade.lesson_id = schedule.schedule_id
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                WHERE grade.login = %s
+                ORDER BY date DESC""", (username,))    
+    grade_info = cur.fetchall()
+    cur.execute("""select distinct subject.subject_name
+                from grade
+                INNER JOIN schedule on grade.lesson_id = schedule.schedule_id
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                WHERE grade.login = %s""", (username,))
+    subjects_for_grade = cur.fetchall()
+    return render_template('student/student_grades.html', grade_info=grade_info, subjects_for_grade=subjects_for_grade)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

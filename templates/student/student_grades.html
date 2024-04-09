@@ -1,0 +1,61 @@
+{% extends "layout_student.html" %}
+{% block body %}
+<div class="container">
+    <div class="my_grades">
+        <h3>Мої оцінки</h3>
+        <label for="subjectSelect">Оберіть предмет:</label>
+        <select id="subjectSelect">
+            <option value="all">Усі предмети</option>
+            {% for subject_tuple in subjects_for_grade %}
+            {% for subject in subject_tuple %}
+            <option value="{{ subject }}">{{ subject }}</option>
+            {% endfor %}
+            {% endfor %}
+
+        </select>
+    </div>
+    <div class="my_teachers">
+        <div class="col-md-8">
+            <table id="example" class="table table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                        <td>Дата</td>
+                        <td>Предмет</td>
+                        <td>Виставлена оцінка</td>
+                        <td>Тип оцінки (ДЗ, СР, КР)</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grade in grade_info %}
+                    <tr class="gradeRow" data-subject="{{ grade[1] }}">
+                        <td>{{ grade[0] }}</td>
+                        <td>{{ grade[1] }}</td>
+                        <td>{{ grade[2] }}</td>
+                        <td>{{ grade[3] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var subjectSelect = document.getElementById('subjectSelect');
+        var gradeRows = document.querySelectorAll('.gradeRow');
+
+        subjectSelect.addEventListener('change', function () {
+            var selectedSubject = subjectSelect.value;
+            gradeRows.forEach(function (row) {
+                var subject = row.dataset.subject;
+                if (selectedSubject === 'all' || subject === selectedSubject) {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
