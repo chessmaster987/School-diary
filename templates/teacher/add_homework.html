@@ -100,6 +100,7 @@
                   <td width="130">
                      <a href="/edit_homework/{{teacher[0]}}" class="btn btn-secondary btn-sm">edit</a>
                      <a href="/delete_homework/{{teacher[0]}}" class="btn btn-danger btn-delete btn-sm">delete</a>
+                     <a href="{{ url_for('homework_comment', homework_number=teacher[0]) }}" class="btn btn-secondary btn-sm">Додати коментар до цього ДЗ</a>
                   </td>
                </tr>
                {% endfor %}

@@ -677,6 +677,32 @@ def add_homework():
     teacher_subjects = get_teacher_subjects()
     return render_template('teacher/add_homework.html', teacher_subjects=teacher_subjects, teacher_homework=teacher_homework)
 
+@app.route('/homework_comment', methods=['GET', 'POST'])
+def homework_comment():
+    username = session.get('username', None)
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""select homeworkcomment.date, homeworkcomment.login, classes.class_name, subject.subject_name, homeworkcomment.comment
+                from homeworkcomment
+                INNER JOIN homework on homeworkcomment.homework_number = homework.homework_number
+                INNER JOIN schedule on homework.lesson_id = schedule.schedule_id
+                INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
+                INNER JOIN subject on timetable.subject_number = subject.subject_number
+                INNER JOIN teacher on timetable.employee_number = teacher.employee_number
+                INNER JOIN student on homeworkcomment.login = student.login
+                INNER JOIN classes on student.class_number = classes.class_number
+                WHERE teacher.login = %s""", (username,))
+    homework_comment = cur.fetchall()
+    cur.execute("""select login from student""")
+    students = cur.fetchall()
+    if request.method == 'POST':
+        students_list = request.form['students_list']
+        homework_number = request.form['homework_number']
+        comment = request.form['comment']
+        cur.execute("""INSERT INTO homeworkcomment (login, homework_number, comment) VALUES (%s, %s, %s)""", (students_list, homework_number, comment))
+        conn.commit()
+        return redirect(url_for('add_homework'))
+    return render_template('teacher/homework_comment.html', homework_comment=homework_comment, students=students)
+
 ################################
 
 
@@ -1111,12 +1137,6 @@ def update_show_lessons(id):
         conn.commit()
     return redirect(url_for('show_teacher_lessons', class_name=session['class_name']))
 
-
-'''
-@app.route('/academic_performance_ranking', methods=['GET', 'POST'])
-def academic_performance_ranking():'''
-
-
 @app.route('/adsence_ranking', methods=['GET', 'POST'])
 def absence_ranking():
     username = session.get('username', None)
@@ -1164,6 +1184,13 @@ def student_grades():
                 WHERE grade.login = %s""", (username,))
     subjects_for_grade = cur.fetchall()
     return render_template('student/student_grades.html', grade_info=grade_info, subjects_for_grade=subjects_for_grade)
+
+
+'''
+@app.route('/academic_performance_ranking', methods=['GET', 'POST'])
+def academic_performance_ranking():'''
+
+
 
 
 if __name__ == "__main__":
