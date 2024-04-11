@@ -692,15 +692,34 @@ def homework_comment():
                 INNER JOIN classes on student.class_number = classes.class_number
                 WHERE teacher.login = %s""", (username,))
     homework_comment = cur.fetchall()
-    cur.execute("""select login from student""")
+    cur.execute("""select distinct student.login from student
+                inner join homeworkcomment on student.login = homeworkcomment.login
+                inner join homework on homeworkcomment.homework_number = homework.homework_number
+                inner join schedule on homework.lesson_id = schedule.schedule_id
+                inner join classes on schedule.class_number = classes.class_number 
+                where classes.class_number = %s""", (session['selected_class'],))
     students = cur.fetchall()
     if request.method == 'POST':
         students_list = request.form['students_list']
         homework_number = request.form['homework_number']
         comment = request.form['comment']
-        cur.execute("""INSERT INTO homeworkcomment (login, homework_number, comment) VALUES (%s, %s, %s)""", (students_list, homework_number, comment))
-        conn.commit()
-        return redirect(url_for('add_homework'))
+        try:
+            cur.execute("""INSERT INTO homeworkcomment (login, homework_number, comment) VALUES (%s, %s, %s)""",
+                        (students_list, homework_number, comment))
+            conn.commit()
+            return redirect(url_for('add_homework'))
+        except psycopg2.DatabaseError as e:
+            error_message = str(e)
+            if 'RAISE EXCEPTION' in error_message:
+                # Обробка повідомлення про конфлікт
+                conn.rollback()
+                return f"Помилка: {error_message}"
+            else:
+                # Інші помилки бази даних
+                conn.rollback()
+                return f"Помилка бази даних: {error_message}"
+        finally:
+            cur.close()
     return render_template('teacher/homework_comment.html', homework_comment=homework_comment, students=students)
 
 ################################
