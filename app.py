@@ -681,7 +681,7 @@ def add_homework():
 def homework_comment():
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""select homeworkcomment.date, homeworkcomment.login, classes.class_name, subject.subject_name, homeworkcomment.comment
+    cur.execute("""select homeworkcomment.comment_number, homeworkcomment.date, homeworkcomment.login, classes.class_name, subject.subject_name, homeworkcomment.comment
                 from homeworkcomment
                 INNER JOIN homework on homeworkcomment.homework_number = homework.homework_number
                 INNER JOIN schedule on homework.lesson_id = schedule.schedule_id
@@ -721,6 +721,14 @@ def homework_comment():
         finally:
             cur.close()
     return render_template('teacher/homework_comment.html', homework_comment=homework_comment, students=students)
+
+
+@app.route('/delete_comment/<id>', methods=['GET', 'POST'])
+def delete_comment(id):
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('DELETE FROM homeworkcomment WHERE comment_number = %s', (id,))
+    conn.commit()
+    return redirect(url_for('add_homework'))
 
 ################################
 
@@ -1208,7 +1216,6 @@ def student_grades():
 '''
 @app.route('/academic_performance_ranking', methods=['GET', 'POST'])
 def academic_performance_ranking():'''
-
 
 
 
