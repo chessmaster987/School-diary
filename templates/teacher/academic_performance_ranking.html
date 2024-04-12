@@ -1,0 +1,60 @@
+{% extends "layout_teacher.html" %}
+{% block body %}
+<div class="teacher">
+    <h3>Рейтинг учнів певного класу за успішністю</h3>
+</div>
+<div class="teacher">
+</div>
+<div class="col-md-4">
+    <div class="card card-body">
+        <form action="{{ url_for('academic_performance_ranking') }}"
+            method="POST">
+            <label for="start_date">Початкова дата:</label>
+            <input type="text" id="start_date" name="start_date"><br>
+
+            <label for="end_date">Кінцева дата:</label><br>
+            <input type="text" id="end_date" name="end_date"><br><br>
+            <div class="form-group">
+                <label for="subject">Предмет</label>
+                <select class="form-control" name="subject" id="subject">
+                    {% for subject in subject_info %}
+                    <option value="{{ subject[0] }}">{{ subject[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="class_number">Клас</label>
+                <select class="form-control" name="class_number" id="class_number">
+                    {% for class in classes_info %}
+                    <option value="{{ class[0] }}">{{ class[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Відправити</button>
+        </form>
+    </div>
+</div>
+<div class="col-md-8">
+    <table id="example" class="table table-striped table-bordered" style="width:100%">
+        <thead>
+            <tr>
+                <td>Логін учня</td>
+                <td>Середня оцінка</td>
+                <td>Номер в рейтингу</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in data_academic_performance_ranking %}
+            <tr>
+                <td>{{ data[0] }}</td>
+                <td>{{ data[1] }}</td>
+                <td>{{ data[2] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+</div>
+
+{% endblock %}

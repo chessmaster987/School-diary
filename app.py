@@ -1213,10 +1213,22 @@ def student_grades():
     return render_template('student/student_grades.html', grade_info=grade_info, subjects_for_grade=subjects_for_grade)
 
 
-'''
-@app.route('/academic_performance_ranking', methods=['GET', 'POST'])
-def academic_performance_ranking():'''
 
+@app.route('/academic_performance_ranking', methods=['GET', 'POST'])
+def academic_performance_ranking():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""select subject_number, subject_name from subject""")
+    subject_info = cur.fetchall()
+    cur.execute("""select class_number, class_name from classes""")
+    classes_info = cur.fetchall()
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        subject = request.form['subject']
+        class_number = request.form['class_number']
+        cur.execute("""SELECT * FROM academic_performance_ranking(%s, %s, %s, %s)""", (start_date, end_date, subject, class_number))
+        data_academic_performance_ranking = cur.fetchall()
+    return render_template('teacher/academic_performance_ranking.html', subject_info=subject_info, classes_info=classes_info, data_academic_performance_ranking=data_academic_performance_ranking)
 
 
 if __name__ == "__main__":
