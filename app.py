@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
 from datetime import datetime
+from collections import defaultdict
 
 app = Flask(__name__)
 app.secret_key = "vlad"
@@ -677,6 +678,7 @@ def add_homework():
     teacher_subjects = get_teacher_subjects()
     return render_template('teacher/add_homework.html', teacher_subjects=teacher_subjects, teacher_homework=teacher_homework)
 
+
 @app.route('/homework_comment', methods=['GET', 'POST'])
 def homework_comment():
     username = session.get('username', None)
@@ -1164,6 +1166,7 @@ def update_show_lessons(id):
         conn.commit()
     return redirect(url_for('show_teacher_lessons', class_name=session['class_name']))
 
+
 @app.route('/adsence_ranking', methods=['GET', 'POST'])
 def absence_ranking():
     username = session.get('username', None)
@@ -1190,10 +1193,12 @@ def absence_ranking():
         presence_data = cur.fetchall()
     return render_template('teacher/absence_ranking.html', class_data=class_data, presence_data=presence_data)
 
-#ОЦІНКИ УЧНЯ!!!
+# ОЦІНКИ УЧНЯ!!!
+
+
 @app.route('/student_grades', methods=['GET', 'POST'])
 def student_grades():
-    username = session.get('username', None) 
+    username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""select grade.date, subject.subject_name, grade.grade, grade.grade_type
                 from grade
@@ -1201,7 +1206,7 @@ def student_grades():
                 INNER JOIN timetable on schedule.timetable_id = timetable.timetable_id
                 INNER JOIN subject on timetable.subject_number = subject.subject_number
                 WHERE grade.login = %s
-                ORDER BY date DESC""", (username,))    
+                ORDER BY date DESC""", (username,))
     grade_info = cur.fetchall()
     cur.execute("""select distinct subject.subject_name
                 from grade
@@ -1213,10 +1218,10 @@ def student_grades():
     return render_template('student/student_grades.html', grade_info=grade_info, subjects_for_grade=subjects_for_grade)
 
 
-
 @app.route('/academic_performance_ranking', methods=['GET', 'POST'])
 def academic_performance_ranking():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    data_academic_performance_ranking = []
     cur.execute("""select subject_number, subject_name from subject""")
     subject_info = cur.fetchall()
     cur.execute("""select class_number, class_name from classes""")
@@ -1226,10 +1231,45 @@ def academic_performance_ranking():
         end_date = request.form['end_date']
         subject = request.form['subject']
         class_number = request.form['class_number']
-        cur.execute("""SELECT * FROM academic_performance_ranking(%s, %s, %s, %s)""", (start_date, end_date, subject, class_number))
+        cur.execute("""SELECT * FROM academic_performance_ranking(%s, %s, %s, %s)""",
+                    (start_date, end_date, subject, class_number))
         data_academic_performance_ranking = cur.fetchall()
     return render_template('teacher/academic_performance_ranking.html', subject_info=subject_info, classes_info=classes_info, data_academic_performance_ranking=data_academic_performance_ranking)
 
+
+@app.route('/statistics_poor_grades', methods=['GET', 'POST'])
+def statistics_poor_grades():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""SELECT  Student.login AS student_login,
+                    Subject.subject_name AS subject,
+                    COUNT(Grade.grade_number) AS marks_count
+                FROM
+                    Student
+                    CROSS JOIN Subject
+                    LEFT JOIN Grade ON Student.login = Grade.login
+                        AND Grade.lesson_id IN (
+                            SELECT Schedule.schedule_id
+                            FROM Schedule
+                            WHERE Schedule.subject_number = Subject.subject_number
+                        )
+                GROUP BY
+                    Student.login,
+                    Subject.subject_name
+                ORDER BY
+                    Student.login,
+                    Subject.subject_name;""")
+    poor_grades = cur.fetchall()
+
+    # Побудова таблиці з результатами запиту
+    table_data = defaultdict(dict)
+    subjects = set()
+
+    for row in poor_grades:
+        student_login, subject, marks_count = row
+        table_data[student_login][subject] = marks_count
+        subjects.add(subject)
+
+    return render_template('teacher/statistics_poor_grades.html', table_data=table_data, subjects=sorted(subjects))
 
 if __name__ == "__main__":
     app.run(debug=True)
