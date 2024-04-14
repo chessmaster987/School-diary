@@ -17,13 +17,18 @@
                <input type="text" class="form-control" name="full_name" placeholder="Full Name">
             </div>
             <div class="form-group">
-               <input type="text" class="form-control" name="class_number" placeholder="Class Number">
+               <label for="class_number">Клас</label>
+               <select class="form-control" name="class_number" id="class_number">
+                  {% for class in classes %}
+                  <option value="{{ class[0] }}">{{ class[1] }}</option>
+                  {% endfor %}
+               </select>
             </div>
             <div class="form-group">
                <input type="text" class="form-control" name="student_role" placeholder="Role" value="student">
             </div>
             <button class="btn btn-primary btn-block">
-               Save
+               Зберегти
             </button>
          </form>
       </div>

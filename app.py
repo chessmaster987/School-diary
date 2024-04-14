@@ -80,7 +80,9 @@ def info_student():
 				INNER JOIN login ON login.username = student.login
                 ORDER BY login ASC""")
     student_data = cur.fetchall()
-    return render_template('admin/info_student.html', student_data=student_data)
+    cur.execute("""select class_number, class_name from classes""")
+    classes = cur.fetchall()
+    return render_template('admin/info_student.html', student_data=student_data, classes=classes)
 
 
 @app.route('/info_teacher', methods=['GET', 'POST'])
@@ -119,7 +121,11 @@ def timetable():
                 INNER JOIN subject ON timetable.subject_number = subject.subject_number
                 INNER JOIN teacher ON timetable.employee_number = teacher.employee_number""")
     timetable_data = cur.fetchall()
-    return render_template('admin/timetable.html', timetable_data=timetable_data)
+    cur.execute("""select subject_number, subject_name from subject""")
+    subjects = cur.fetchall()
+    cur.execute("""select teacher.employee_number, teacher.full_name from teacher""")
+    teachers = cur.fetchall()
+    return render_template('admin/timetable.html', timetable_data=timetable_data, subjects=subjects, teachers=teachers)
 
 
 @app.route('/teacher', methods=['GET'])
@@ -206,8 +212,18 @@ def add_class():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         class_name = request.form['class_name']
-        cur.execute(
-            "INSERT INTO classes (class_name) VALUES (%s)", (class_name,))
+
+        # Отримуємо усі існуючі назви класів
+        cur.execute("""SELECT class_name FROM classes""")
+        class_names = [row['class_name'] for row in cur.fetchall()]
+
+        # Перевіряємо, чи назва класу вже існує
+        if class_name in class_names:
+            return 'Цей клас вже існує!'
+
+        # Якщо назва класу унікальна, додаємо її до бази даних
+        cur.execute("INSERT INTO classes (class_name) VALUES (%s)",
+                    (class_name,))
         conn.commit()
         return redirect(url_for('info_classes'))
 
@@ -217,12 +233,20 @@ def add_subject():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         subject_name = request.form['subject_name']
+
+        # Отримуємо усі існуючі назви предметів
+        cur.execute("""SELECT subject_name FROM subject""")
+        existing_subjects = [row['subject_name'] for row in cur.fetchall()]
+
+        # Перевіряємо, чи назва предмету вже існує
+        if subject_name in existing_subjects:
+            return 'Цей предмет вже існує!'
+
+        # Якщо назва предмету унікальна, додаємо її до бази даних
         cur.execute(
             "INSERT INTO subject (subject_name) VALUES (%s)", (subject_name,))
         conn.commit()
-        flash('Subject Added successfully')
         return redirect(url_for('info_subject'))
-
 
 @app.route('/add_timetable', methods=['POST'])
 def add_timetable():
@@ -230,10 +254,20 @@ def add_timetable():
     if request.method == 'POST':
         subject_name = request.form['subject_name']
         teacher_name = request.form['teacher_name']
-        cur.execute(
-            "INSERT INTO timetable (subject_number, employee_number) VALUES (%s, %s)", (subject_name, teacher_name))
+        # Перевірка, чи існує вже запис в розкладі з такими ж значеннями subject_name і teacher_name
+        cur.execute("""SELECT * FROM timetable
+                       INNER JOIN subject ON timetable.subject_number = subject.subject_number
+                       INNER JOIN teacher ON timetable.employee_number = teacher.employee_number
+                       WHERE subject.subject_number = %s AND teacher.employee_number = %s""", (subject_name, teacher_name))
+        existing_entry = cur.fetchone()
+
+        if existing_entry:
+            return 'Запис в розкладі з такими ж значеннями предмету і вчителя вже існує!'
+
+        # Якщо запис унікальний, додаємо його до таблиці розкладу
+        cur.execute("INSERT INTO timetable (subject_number, employee_number) VALUES (%s, %s)",
+                    (subject_name, teacher_name))
         conn.commit()
-        flash('Timetable Added successfully')
         return redirect(url_for('timetable'))
 
 
@@ -587,7 +621,11 @@ def get_teachers_for_zvit():
 
 @app.route('/zvit_teacher', methods=['GET', 'POST'])
 def zvit_teacher():
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     zvit_info = []
+    cur.execute(
+        """select teacher.employee_number, teacher.full_name from teacher""")
+    teacher_data = cur.fetchall()
     if request.method == 'POST':
         teacher = request.form['teacher']
         start_date = request.form['start_date']
@@ -597,7 +635,7 @@ def zvit_teacher():
             """SELECT * FROM teacher_report(%s, %s, %s)""", (teacher, start_date, end_date))
         zvit_info = cur.fetchall()
 
-    return render_template('admin/zvit_teacher.html', zvit_data=zvit_info)
+    return render_template('admin/zvit_teacher.html', zvit_data=zvit_info, teacher_data=teacher_data)
 
 
 ################################
@@ -1247,9 +1285,11 @@ def statistics_poor_grades():
         start_date = request.form['start_date']
         end_date = request.form['end_date']
         class_num = request.form['class_num']
-        cur.execute("""SELECT * FROM statistics_poor_grades(%s, %s, %s)""", (start_date, end_date, class_num))
+        cur.execute("""SELECT * FROM statistics_poor_grades(%s, %s, %s)""",
+                    (start_date, end_date, class_num))
         data_statistics_poor_grades = cur.fetchall()
     return render_template('teacher/statistics_poor_grades.html', classes=classes, data_statistics_poor_grades=data_statistics_poor_grades)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -63,12 +63,17 @@
          <div class="card card-body">
             <form action="{{ url_for('zvit_teacher') }}" method="POST">
                <label for="teacher">Вчитель:</label>
-               <input type="text" class="form-control" id="teacher" name="teacher" placeholder="ID вчителя" list="teacher_list">
+               <!--<input type="text" class="form-control" id="teacher" name="teacher" placeholder="ID вчителя" list="teacher_list">
                <datalist id="teacher_list">
                   {% for teacher in teachers %}
                   <option value="{{ teacher['employee_number'] }}">
                      {% endfor %}
-               </datalist>
+               </datalist>-->
+               <select class="form-control" name="teacher" id="teacher">
+                  {% for teacher in teacher_data %}
+                  <option value="{{ teacher[0] }}">{{ teacher[1] }}</option>
+                  {% endfor %}
+               </select>
   
                <label for="start_date">Початкова дата:</label>
                <input type="text" id="start_date" name="start_date">
