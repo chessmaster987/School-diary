@@ -1,48 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Marks Table</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
-</head>
-
-<body>
-    <h2>Student Marks Table</h2>
-    <table border="1">
-        <tr>
-            <th>Student Login</th>
-            {% for subject in subjects %}
-            <th>{{ subject }}</th>
+{% extends "layout_teacher.html" %}
+{% block body %}
+<div class="teacher">
+    <h3>Статистика отримання класом незадовільних оцінок</h3>
+</div>
+<div class="teacher">
+</div>
+<div class="col-md-4">
+    <div class="card card-body">
+        <form action="{{ url_for('statistics_poor_grades') }}" method="POST">
+            <label for="start_date">Початкова дата:</label>
+            <input type="text" id="start_date" name="start_date"><br>
+            <label for="end_date">Кінцева дата:</label><br>
+            <input type="text" id="end_date" name="end_date"><br><br>
+            <div class="form-group">
+                <label for="class_num">Клас</label>
+                <select class="form-control" name="class_num" id="class_num">
+                    {% for class in classes %}
+                    <option value="{{ class[0] }}">{{ class[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Відправити</button>
+        </form>
+    </div>
+</div>
+<div class="col-md-8">
+    <table id="example" class="table table-striped table-bordered" style="width:100%">
+        <thead>
+            <tr>
+                <td>Логін учня</td>
+                <td>Предмет</td>
+                <td>Кількість незадовільних оцінок</td>
+                <td>Місце в рейтингу</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in data_statistics_poor_grades %}
+            <tr>
+                <td>{{ data[0] }}</td>
+                <td>{{ data[1] }}</td>
+                <td>{{ data[2] }}</td>
+                <td>{{ data[3] }}</td>
+            </tr>
             {% endfor %}
-        </tr>
-        {% for student_login, marks in table_data.items() %}
-        <tr>
-            <td>{{ student_login }}</td>
-            {% for subject in subjects %}
-            <td>{{ marks.get(subject, 0) }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
+        </tbody>
     </table>
-</body>
+</div>
+</div>
+</div>
 
-</html>
+{% endblock %}

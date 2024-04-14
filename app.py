@@ -1240,36 +1240,16 @@ def academic_performance_ranking():
 @app.route('/statistics_poor_grades', methods=['GET', 'POST'])
 def statistics_poor_grades():
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("""SELECT  Student.login AS student_login,
-                    Subject.subject_name AS subject,
-                    COUNT(Grade.grade_number) AS marks_count
-                FROM
-                    Student
-                    CROSS JOIN Subject
-                    LEFT JOIN Grade ON Student.login = Grade.login
-                        AND Grade.lesson_id IN (
-                            SELECT Schedule.schedule_id
-                            FROM Schedule
-                            WHERE Schedule.subject_number = Subject.subject_number
-                        )
-                GROUP BY
-                    Student.login,
-                    Subject.subject_name
-                ORDER BY
-                    Student.login,
-                    Subject.subject_name;""")
-    poor_grades = cur.fetchall()
-
-    # Побудова таблиці з результатами запиту
-    table_data = defaultdict(dict)
-    subjects = set()
-
-    for row in poor_grades:
-        student_login, subject, marks_count = row
-        table_data[student_login][subject] = marks_count
-        subjects.add(subject)
-
-    return render_template('teacher/statistics_poor_grades.html', table_data=table_data, subjects=sorted(subjects))
+    data_statistics_poor_grades = []
+    cur.execute("""select class_number, class_name from classes""")
+    classes = cur.fetchall()
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        class_num = request.form['class_num']
+        cur.execute("""SELECT * FROM statistics_poor_grades(%s, %s, %s)""", (start_date, end_date, class_num))
+        data_statistics_poor_grades = cur.fetchall()
+    return render_template('teacher/statistics_poor_grades.html', classes=classes, data_statistics_poor_grades=data_statistics_poor_grades)
 
 if __name__ == "__main__":
     app.run(debug=True)
