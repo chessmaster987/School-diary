@@ -12,7 +12,7 @@
          </div> -->
          <select class="form-control" name="teacher_classes" id="teacher_classes">
             {% for class_number in teacher_classes %}
-            <option value="{{ class_number }}">{{ class_number }}</option>
+            <option value="{{ class_number[0] }}">{{ class_number[1] }}</option>
             {% endfor %}
          </select>
          <div class="form-group">

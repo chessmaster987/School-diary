@@ -835,14 +835,14 @@ def get_teacher_classes():
     username = session.get('username', None)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""
-                SELECT DISTINCT classes.class_number 
+                SELECT DISTINCT classes.class_number, classes.class_name
                 FROM teacher
                 INNER JOIN timetable on teacher.employee_number = timetable.employee_number
                 INNER JOIN schedule on timetable.timetable_id = schedule.timetable_id
                 INNER JOIN classes on schedule.class_number = classes.class_number
                 WHERE teacher.login = %s""", (username,))
 
-    classes = [row[0] for row in cur.fetchall()]
+    classes = cur.fetchall()
     cur.close()
     return classes
 
@@ -862,6 +862,7 @@ def add_classes_notif():
         cur.execute(
             "INSERT INTO notification (date, class_number, employee_number, description) VALUES (%s,%s,%s,%s)", (current_date, class_number, teacher_id, notif_text))
         conn.commit()
+       
         return redirect(url_for('notif_classes'))
 
     return render_template('teacher/notif_classes.html')
