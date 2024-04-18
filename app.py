@@ -19,18 +19,6 @@ conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
                         password=DB_PASS, host=DB_HOST)
 
 
-# @app.route("/main", methods=['GET', 'POST'])
-# def main():
-#    if request.method == 'POST':
-#        action = request.form.get('action')
-#        if action == 'crud':
-#            return redirect('/crud')
-#        elif action == 'logout':
-#            return redirect('/logout')
-#
-#    return render_template('main.html')
-
-
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -1206,7 +1194,7 @@ def update_show_lessons(id):
     return redirect(url_for('show_teacher_lessons', class_name=session['class_name']))
 
 
-@app.route('/adsence_ranking', methods=['GET', 'POST'])
+@app.route('/absence_ranking', methods=['GET', 'POST'])
 def absence_ranking():
     username = session.get('username', None)
     presence_data = []
