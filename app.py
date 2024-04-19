@@ -10,14 +10,21 @@ from collections import defaultdict
 app = Flask(__name__)
 app.secret_key = "vlad"
 
-DB_HOST = "localhost"
-DB_NAME = "Bazu Danych"
-DB_USER = "postgres"
-DB_PASS = "25082003"
+connect_user = {
+    'database': 'Bazu Danych',
+    'user': 'connect_user',
+    'password': 'connect_user',
+    'host': 'localhost',
+    'port': '5432'
+}
 
-conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER,
-                        password=DB_PASS, host=DB_HOST)
-
+administrator = {
+    'database': 'Bazu Danych',
+    'user': 'administrator',
+    'password': 'administrator',
+    'host': 'localhost',
+    'port': '5432'
+}
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -25,7 +32,12 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
+        conn = psycopg2.connect(**connect_user)
+        conn.commit()  
         cur = conn.cursor()
+        cur.execute("""select * from current_user""")
+        result = cur.fetchall()
+        print(result)
         cur.execute(
             "SELECT username FROM login WHERE username = %s AND password = %s", (username, password))
         user = cur.fetchone()
@@ -34,9 +46,15 @@ def login():
             cur.execute(
                 "SELECT role FROM login WHERE username = %s", (username,))
             role = cur.fetchone()
-
+            conn.close()
             if role and role[0] == 'admin':
                 session['username'] = username
+                conn = psycopg2.connect(**administrator)
+                conn.commit()
+                cur = conn.cursor()
+                cur.execute("""select * from current_user""")
+                result = cur.fetchall()
+                print(result)
                 return redirect('/admin')
             elif role and role[0] == 'teacher':
                 session['username'] = username
@@ -111,7 +129,8 @@ def timetable():
     timetable_data = cur.fetchall()
     cur.execute("""select subject_number, subject_name from subject""")
     subjects = cur.fetchall()
-    cur.execute("""select teacher.employee_number, teacher.full_name from teacher""")
+    cur.execute(
+        """select teacher.employee_number, teacher.full_name from teacher""")
     teachers = cur.fetchall()
     return render_template('admin/timetable.html', timetable_data=timetable_data, subjects=subjects, teachers=teachers)
 
@@ -235,6 +254,7 @@ def add_subject():
             "INSERT INTO subject (subject_name) VALUES (%s)", (subject_name,))
         conn.commit()
         return redirect(url_for('info_subject'))
+
 
 @app.route('/add_timetable', methods=['POST'])
 def add_timetable():
@@ -850,7 +870,7 @@ def add_classes_notif():
         cur.execute(
             "INSERT INTO notification (date, class_number, employee_number, description) VALUES (%s,%s,%s,%s)", (current_date, class_number, teacher_id, notif_text))
         conn.commit()
-       
+
         return redirect(url_for('notif_classes'))
 
     return render_template('teacher/notif_classes.html')
