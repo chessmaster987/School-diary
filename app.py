@@ -10,18 +10,34 @@ from collections import defaultdict
 app = Flask(__name__)
 app.secret_key = "vlad"
 
-connect_user = {
+connection_user = {
     'database': 'Bazu Danych',
-    'user': 'connect_user',
-    'password': 'connect_user',
+    'user': 'connection_user',
+    'password': 'connection_user',
     'host': 'localhost',
     'port': '5432'
 }
 
-administrator = {
+administrator_user = {
     'database': 'Bazu Danych',
-    'user': 'administrator',
-    'password': 'administrator',
+    'user': 'administrator_user',
+    'password': 'administrator_user',
+    'host': 'localhost',
+    'port': '5432'
+}
+
+teacher_user = {
+    'database': 'Bazu Danych',
+    'user': 'teacher_user',
+    'password': 'teacher_user',
+    'host': 'localhost',
+    'port': '5432'
+}
+
+student_user = {
+    'database': 'Bazu Danych',
+    'user': 'student_user',
+    'password': 'student_user',
     'host': 'localhost',
     'port': '5432'
 }
@@ -32,8 +48,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        conn = psycopg2.connect(**connect_user)
-        conn.commit()  
+        conn = psycopg2.connect(**connection_user)
+        conn.commit()
         cur = conn.cursor()
         cur.execute("""select * from current_user""")
         result = cur.fetchall()
@@ -49,7 +65,7 @@ def login():
             conn.close()
             if role and role[0] == 'admin':
                 session['username'] = username
-                conn = psycopg2.connect(**administrator)
+                conn = psycopg2.connect(**administrator_user)
                 conn.commit()
                 cur = conn.cursor()
                 cur.execute("""select * from current_user""")
@@ -58,9 +74,21 @@ def login():
                 return redirect('/admin')
             elif role and role[0] == 'teacher':
                 session['username'] = username
+                conn = psycopg2.connect(**teacher_user)
+                conn.commit()
+                cur = conn.cursor()
+                cur.execute("""select * from current_user""")
+                result = cur.fetchall()
+                print(result)
                 return redirect('/teacher')
             elif role and role[0] == 'student':
                 session['username'] = username
+                conn = psycopg2.connect(**student_user)
+                conn.commit()
+                cur = conn.cursor()
+                cur.execute("""select * from current_user""")
+                result = cur.fetchall()
+                print(result)
                 return redirect('/student')
         else:
             return 'Неправильний логін або пароль'
@@ -80,6 +108,7 @@ def admin():
 
 @app.route('/info_student', methods=['GET', 'POST'])
 def info_student():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor()
     cur.execute("""SELECT student.login, login.password, student.full_name, classes.class_name FROM student 
                 INNER JOIN classes ON classes.class_number = student.class_number
@@ -93,6 +122,7 @@ def info_student():
 
 @app.route('/info_teacher', methods=['GET', 'POST'])
 def info_teacher():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor()
     cur.execute("""SELECT teacher.login, teacher.employee_number, login.password, teacher.full_name
                 FROM teacher
@@ -105,14 +135,19 @@ def info_teacher():
 
 @app.route('/info_classes', methods=['GET', 'POST'])
 def info_classes():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor()
     cur.execute("""SELECT * FROM classes""")
     classes_data = cur.fetchall()
+    cur.execute("""select * from current_user""")
+    result = cur.fetchall()
+    print(result)
     return render_template('admin/info_classes.html', classes_data=classes_data)
 
 
 @app.route('/info_subject', methods=['GET', 'POST'])
 def info_subject():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor()
     cur.execute("""SELECT * FROM subject""")
     subject_data = cur.fetchall()
@@ -121,6 +156,7 @@ def info_subject():
 
 @app.route('/timetable', methods=['GET', 'POST'])
 def timetable():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor()
     cur.execute("""SELECT timetable.timetable_id, subject.subject_name, teacher.login, teacher.full_name
                 FROM timetable
@@ -140,13 +176,6 @@ def teacher():
     username = session.get('username', None)
     return render_template('teacher/teacher.html', username=username)
 
-
-# @app.route('/student', methods=['GET'])
-# def student():
-#    username = session.get('username', None)
-#    return render_template('student/student.html', username=username)
-
-
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     if request.method == 'POST':
@@ -156,23 +185,9 @@ def logout():
         print(session.get('username', None))
         return redirect(url_for('login'))  # Переадресація на сторінку login
 
-
-@app.route('/crud')
-def Index():
-    # if 'logged_in' in session:
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    s = "SELECT * FROM student"
-    cur.execute(s)  # Execute the SQL
-    list_users = cur.fetchall()
-    return render_template('index.html', list_users=list_users)
-    # else:
-    # return redirect(url_for('login'))
-
-# ПЕРЕДЕЛАТЬ!!!
-
-
 @app.route('/add_student', methods=['POST'])
 def add_student():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         login = request.form['login']
@@ -193,6 +208,7 @@ def add_student():
 
 @app.route('/add_teacher', methods=['POST'])
 def add_teacher():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         login = request.form['teacher_login']
@@ -216,6 +232,7 @@ def add_teacher():
 
 @app.route('/add_class', methods=['POST'])
 def add_class():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         class_name = request.form['class_name']
@@ -237,6 +254,7 @@ def add_class():
 
 @app.route('/add_subject', methods=['POST'])
 def add_subject():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         subject_name = request.form['subject_name']
@@ -258,6 +276,7 @@ def add_subject():
 
 @app.route('/add_timetable', methods=['POST'])
 def add_timetable():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         subject_name = request.form['subject_name']
@@ -281,6 +300,7 @@ def add_timetable():
 
 @app.route('/edit_student/<id>', methods=['POST', 'GET'])
 def get_employee(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT student.login, login.password, student.full_name, student.class_number
                 FROM student 
@@ -294,6 +314,7 @@ def get_employee(id):
 
 @app.route('/edit_teacher/<id>', methods=['POST', 'GET'])
 def get_teacher(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT teacher.login, login.password, teacher.full_name, teacher.class_number
                 FROM teacher
@@ -307,6 +328,7 @@ def get_teacher(id):
 
 @app.route('/edit_class/<id>', methods=['POST', 'GET'])
 def get_class(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT class_number, class_name 
                 FROM classes
@@ -319,6 +341,7 @@ def get_class(id):
 
 @app.route('/edit_subject/<id>', methods=['POST', 'GET'])
 def get_subject(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT subject_number, subject_name 
                 FROM subject
@@ -331,6 +354,7 @@ def get_subject(id):
 
 @app.route('/edit_timetable/<id>', methods=['POST', 'GET'])
 def get_timetable(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT timetable_id, subject_number, employee_number
                 FROM timetable
@@ -343,6 +367,7 @@ def get_timetable(id):
 
 @app.route('/update_student/<id>', methods=['POST', 'GET'])
 def update_student(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         login = request.form['login']
@@ -367,6 +392,7 @@ def update_student(id):
 
 @app.route('/update_teacher/<id>', methods=['POST', 'GET'])
 def update_teacher(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         login = request.form['login']
@@ -394,6 +420,7 @@ def update_teacher(id):
 
 @app.route('/update_class/<id>', methods=['POST', 'GET'])
 def update_class(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         class_name = request.form['class_name']
@@ -406,6 +433,7 @@ def update_class(id):
 
 @app.route('/update_subject/<id>', methods=['POST', 'GET'])
 def update_subject(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         subject_name = request.form['subject_name']
@@ -418,6 +446,7 @@ def update_subject(id):
 
 @app.route('/update_timetable/<id>', methods=['POST', 'GET'])
 def update_timetable(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         subject_name = request.form['subject_name']
@@ -431,6 +460,7 @@ def update_timetable(id):
 
 @app.route('/delete_student/<id>', methods=['POST', 'GET'])
 def delete_student(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute('DELETE FROM student WHERE login = %s', (id,))
@@ -443,6 +473,7 @@ def delete_student(id):
 
 @app.route('/delete_teacher/<id>', methods=['POST', 'GET'])
 def delete_teacher(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute('DELETE FROM teacher WHERE login = %s', (id,))
@@ -455,6 +486,7 @@ def delete_teacher(id):
 
 @app.route('/delete_class/<id>', methods=['POST', 'GET'])
 def delete_class(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute('DELETE FROM classes WHERE class_number = %s', (id,))
@@ -465,6 +497,7 @@ def delete_class(id):
 
 @app.route('/delete_subject/<id>', methods=['POST', 'GET'])
 def delete_subject(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute('DELETE FROM subject WHERE subject_number = %s', (id,))
@@ -475,6 +508,7 @@ def delete_subject(id):
 
 @app.route('/delete_timetable/<id>', methods=['POST', 'GET'])
 def delete_timetable(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute('DELETE FROM timetable WHERE timetable_id = %s', (id,))
@@ -493,6 +527,7 @@ def delete_timetable(id):
 def student():
     username = session.get('username', None)
     print(session.get('username', None))
+    conn = psycopg2.connect(**student_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT s.full_name AS student_name, c.class_name, t.full_name AS class_teacher
                 FROM Student s
@@ -509,6 +544,7 @@ def student():
 @app.route('/info_homework', methods=['GET'])
 def info_homework():
     username = session.get('username', None)
+    conn = psycopg2.connect(**student_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute("""SELECT homework.date, subject.subject_name, homework.homework_text
@@ -528,6 +564,7 @@ def info_homework():
 @app.route('/notification', methods=['GET'])
 def notification():
     username = session.get('username', None)
+    conn = psycopg2.connect(**student_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute("""SELECT notification.date, teacher.full_name, notification.description
@@ -545,6 +582,7 @@ def notification():
 @app.route('/my_teachers', methods=['GET'])
 def my_teachers():
     username = session.get('username', None)
+    conn = psycopg2.connect(**student_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute("""SELECT DISTINCT teacher.full_name, subject.subject_name
@@ -563,6 +601,7 @@ def my_teachers():
 @app.route('/homework_comments', methods=['GET'])
 def homework_comments():
     username = session.get('username', None)
+    conn = psycopg2.connect(**student_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT DISTINCT homeworkcomment.date, subject.subject_name, homeworkcomment.comment
                 FROM homeworkcomment
@@ -585,6 +624,7 @@ def homework_comments():
 @app.route('/teacher_detail', methods=['GET', 'POST'])
 def teacher_classes():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute("""SELECT DISTINCT classes.class_name 
@@ -601,6 +641,7 @@ def teacher_classes():
 @app.route('/teacher_classes_detail/<class_name>', methods=['GET', 'POST'])
 def teacher_classes_detail(class_name):
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     selected_student = request.args.get('selected_student')
     session['selected_student'] = selected_student
@@ -620,6 +661,7 @@ def teacher_classes_detail(class_name):
 # for admin panel adding a new features
 
 def get_teachers_for_zvit():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("SELECT employee_number FROM teacher")
     teachers = cur.fetchall()
@@ -629,6 +671,7 @@ def get_teachers_for_zvit():
 
 @app.route('/zvit_teacher', methods=['GET', 'POST'])
 def zvit_teacher():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     zvit_info = []
     cur.execute(
@@ -650,6 +693,7 @@ def zvit_teacher():
 @app.route('/homework', methods=['GET', 'POST'])
 def homework():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         selected_class = request.form['selected_class']
@@ -669,6 +713,7 @@ def homework():
 
 def get_teacher_subjects():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""
         SELECT DISTINCT subject.subject_name
@@ -687,6 +732,7 @@ def get_teacher_subjects():
 @app.route('/add_homework', methods=['GET', 'POST'])
 def add_homework():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     if request.method == 'POST':
@@ -728,6 +774,7 @@ def add_homework():
 @app.route('/homework_comment', methods=['GET', 'POST'])
 def homework_comment():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""select homeworkcomment.comment_number, homeworkcomment.date, homeworkcomment.login, classes.class_name, subject.subject_name, homeworkcomment.comment
                 from homeworkcomment
@@ -773,6 +820,7 @@ def homework_comment():
 
 @app.route('/delete_comment/<id>', methods=['GET', 'POST'])
 def delete_comment(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('DELETE FROM homeworkcomment WHERE comment_number = %s', (id,))
     conn.commit()
@@ -783,6 +831,7 @@ def delete_comment(id):
 
 @app.route('/edit_homework/<id>', methods=['GET', 'POST'])
 def edit_homework(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(
         """select homework_number, homework_text from homework where homework_number = %s""", (id,))
@@ -793,6 +842,7 @@ def edit_homework(id):
 
 @app.route('/update_homework/<id>', methods=['POST', 'GET'])
 def update_homework(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         homework_description = request.form['homework_description']
@@ -807,6 +857,7 @@ def update_homework(id):
 
 @app.route('/delete_homework/<id>', methods=['GET', 'POST'])
 def delete_homework(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('DELETE FROM homework WHERE homework_number = %s', (id,))
     conn.commit()
@@ -821,6 +872,7 @@ def teacher_notif():
 @app.route('/teacher_notif/classes', methods=['GET'])
 def notif_classes():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(
         """SELECT employee_number FROM teacher WHERE teacher.login = %s""", (username,))
@@ -841,6 +893,7 @@ def notif_students():
 
 def get_teacher_classes():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""
                 SELECT DISTINCT classes.class_number, classes.class_name
@@ -858,6 +911,7 @@ def get_teacher_classes():
 @app.route('/teacher_notif/classes/add_classes_notif', methods=['GET', 'POST'])
 def add_classes_notif():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         class_number = request.form['teacher_classes']
@@ -878,6 +932,7 @@ def add_classes_notif():
 
 @app.route('/edit_classes_notif/<id>', methods=['POST', 'GET'])
 def edit_classes_notif(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT notification_number, class_number, description
                 FROM notification
@@ -890,6 +945,7 @@ def edit_classes_notif(id):
 
 @app.route('/update_classes_notif/<id>', methods=['POST', 'GET'])
 def update_classes_notif(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         class_number = request.form['class_number']
@@ -906,6 +962,7 @@ def update_classes_notif(id):
 
 @app.route('/delete_classes_notif/<id>', methods=['POST', 'GET'])
 def delete_classes_notif(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('DELETE FROM notification WHERE notification_number = %s', (id,))
     conn.commit()
@@ -917,6 +974,7 @@ def delete_classes_notif(id):
 @app.route('/student_schedule', methods=['POST', 'GET'])
 def student_schedule():
     username = session.get('username', None)
+    conn = psycopg2.connect(**student_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT classes.class_number FROM classes
                 INNER JOIN student on classes.class_number = student.class_number
@@ -946,6 +1004,7 @@ def student_schedule():
 
 @app.route('/teacher_schedule', methods=['POST', 'GET'])
 def teacher_schedule():
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT Classes.class_name, Schedule.day, Schedule.subject_number, Subject.subject_name, Teacher.full_name
                 FROM Schedule
@@ -970,6 +1029,7 @@ def teacher_schedule():
 
 @app.route('/admin_schedule', methods=['POST', 'GET'])
 def admin_schedule():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("SELECT subject_number, subject_name FROM Subject")
     subjects = cur.fetchall()
@@ -995,6 +1055,7 @@ def admin_schedule():
 
 
 def get_timetable_info():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""
         SELECT timetable.timetable_id, subject.subject_name, teacher.full_name
@@ -1008,6 +1069,7 @@ def get_timetable_info():
 
 @app.route('/add_schedule_component', methods=['POST'])
 def add_schedule_component():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         timetable_id = request.form['timetable_id']
@@ -1043,6 +1105,7 @@ def add_schedule_component():
 
 
 def get_classes():
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT class_number, class_name from classes""")
     classes_data = cur.fetchall()
@@ -1051,6 +1114,7 @@ def get_classes():
 
 @app.route('/delete_schedule_row/<id>', methods=['POST', 'GET'])
 def delete_schedule_row(id):
+    conn = psycopg2.connect(**administrator_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('DELETE FROM schedule WHERE schedule_id = %s', (id,))
     conn.commit()
@@ -1059,6 +1123,7 @@ def delete_schedule_row(id):
 
 @app.route('/zvit_uchni_avg_grade/<selected_student>', methods=['POST', 'GET'])
 def zvit_uchni_avg_grade(selected_student):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     session['selected_student'] = selected_student
     avg_grades = []
@@ -1087,6 +1152,7 @@ def zvit_uchni_avg_grade(selected_student):
 @app.route('/teaching_lesson_class_choice', methods=['POST', 'GET'])
 def teaching_lesson_class_choice():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute("""SELECT DISTINCT classes.class_name 
@@ -1103,6 +1169,7 @@ def teaching_lesson_class_choice():
 @app.route('/teacher_lesson/<class_name>', methods=['POST', 'GET'])
 def teacher_lesson(class_name):
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     student_data = get_students(class_name)
     subjects = get_teacher_subjects()
@@ -1136,6 +1203,7 @@ def teacher_lesson(class_name):
 
 def get_lesson_id(class_name):
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(
         """SELECT class_number from classes where class_name = %s""", (class_name,))
@@ -1152,6 +1220,7 @@ def get_lesson_id(class_name):
 
 
 def get_students(class_name):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT login FROM student 
                 INNER JOIN classes on student.class_number = classes.class_number
@@ -1163,6 +1232,7 @@ def get_students(class_name):
 @app.route('/show_teacher_lessons/<class_name>', methods=['POST', 'GET'])
 def show_teacher_lessons(class_name):
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(
         """SELECT class_number from classes where class_name = %s""", (class_name,))
@@ -1182,6 +1252,7 @@ def show_teacher_lessons(class_name):
 
 @app.route('/delete_show_lessons/<id>', methods=['POST', 'GET'])
 def delete_show_lessons(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute('DELETE FROM grade WHERE grade_number = %s', (id,))
     conn.commit()
@@ -1190,6 +1261,7 @@ def delete_show_lessons(id):
 
 @app.route('/edit_show_lessons/<id>', methods=['POST', 'GET'])
 def edit_show_lessons(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""select grade.grade_number, grade.grade, grade.grade_type, grade.presence_mark
                 from grade
@@ -1200,6 +1272,7 @@ def edit_show_lessons(id):
 
 @app.route('/update_show_lessons/<id>', methods=['POST', 'GET'])
 def update_show_lessons(id):
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         grade = request.form['grade']
@@ -1217,6 +1290,7 @@ def update_show_lessons(id):
 @app.route('/absence_ranking', methods=['GET', 'POST'])
 def absence_ranking():
     username = session.get('username', None)
+    conn = psycopg2.connect(**teacher_user)
     presence_data = []
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""SELECT DISTINCT classes.class_number, classes.class_name 
@@ -1246,6 +1320,7 @@ def absence_ranking():
 @app.route('/student_grades', methods=['GET', 'POST'])
 def student_grades():
     username = session.get('username', None)
+    conn = psycopg2.connect(**student_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute("""select grade.date, subject.subject_name, grade.grade, grade.grade_type
                 from grade
@@ -1267,6 +1342,7 @@ def student_grades():
 
 @app.route('/academic_performance_ranking', methods=['GET', 'POST'])
 def academic_performance_ranking():
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data_academic_performance_ranking = []
     cur.execute("""select subject_number, subject_name from subject""")
@@ -1286,6 +1362,7 @@ def academic_performance_ranking():
 
 @app.route('/statistics_poor_grades', methods=['GET', 'POST'])
 def statistics_poor_grades():
+    conn = psycopg2.connect(**teacher_user)
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     data_statistics_poor_grades = []
     cur.execute("""select class_number, class_name from classes""")
