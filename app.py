@@ -6,6 +6,7 @@ from io import BytesIO
 import base64
 from datetime import datetime
 from collections import defaultdict
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = "vlad"
@@ -54,8 +55,11 @@ def login():
         cur.execute("""select * from current_user""")
         result = cur.fetchall()
         print(result)
+        # Хешуємо введений користувачем пароль
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
+        print(hashed_password)
         cur.execute(
-            "SELECT username FROM login WHERE username = %s AND password = %s", (username, password))
+            "SELECT username FROM login WHERE username = %s AND password = %s", (username, hashed_password))
         user = cur.fetchone()
 
         if user:
@@ -99,7 +103,7 @@ def login():
 @app.route('/admin', methods=['GET'])
 def admin():
     username = session.get('username', None)
-    if username == 'admin':
+    if username == 'admin' or 'test_admin':
         print(session.get('username', None))
         return render_template('admin/admin.html', username=username)
     else:
@@ -195,12 +199,13 @@ def add_student():
         full_name = request.form['full_name']
         class_number = request.form['class_number']
         role = request.form['student_role']
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
         print(role)
         cur.execute(
             "INSERT INTO student (login, full_name, class_number) VALUES (%s,%s,%s)", (login, full_name, class_number))
         conn.commit()
         cur.execute(
-            "INSERT INTO login (username, password, role) VALUES (%s,%s,%s)", (login, password, role))
+            "INSERT INTO login (username, password, role) VALUES (%s,%s,%s)", (login, hashed_password, role))
         conn.commit()
         flash('Student Added successfully')
         return redirect(url_for('info_student'))
@@ -216,6 +221,7 @@ def add_teacher():
         full_name = request.form['teacher_name']
         class_number = request.form['teacher_class']
         role = request.form['teacher_role']
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
         print(role)
         if not class_number:
             # Якщо значення не введено, встановлюємо його як None (еквівалентно відображенню null у БД)
@@ -224,7 +230,7 @@ def add_teacher():
             "INSERT INTO teacher (login, full_name, class_number) VALUES (%s,%s,%s)", (login, full_name, class_number))
         conn.commit()
         cur.execute(
-            "INSERT INTO login (username, password, role) VALUES (%s,%s,%s)", (login, password, role))
+            "INSERT INTO login (username, password, role) VALUES (%s,%s,%s)", (login, hashed_password, role))
         conn.commit()
         flash('Teacher Added successfully')
         return redirect(url_for('info_teacher'))
