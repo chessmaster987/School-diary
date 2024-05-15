@@ -380,6 +380,7 @@ def update_student(id):
         password = request.form['password']
         full_name = request.form['full_name']
         class_number = request.form['class_number']
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
 
         cur.execute("""
             UPDATE student
@@ -390,7 +391,7 @@ def update_student(id):
         """, (login, full_name, class_number, id))
         conn.commit()
         cur.execute(
-            """UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, password, id))
+            """UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, hashed_password, id))
         conn.commit()
         # flash('Student Updated Successfully')
         return redirect(url_for('info_student'))
@@ -405,6 +406,7 @@ def update_teacher(id):
         password = request.form['password']
         full_name = request.form['full_name']
         class_number = request.form['class_number']
+        hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
 
         if not class_number:
             # Якщо значення не введено, встановлюємо його як None (еквівалентно відображенню null у БД)
@@ -418,7 +420,7 @@ def update_teacher(id):
         """, (login, full_name, class_number, id))
         conn.commit()
         cur.execute(
-            """UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, password, id))
+            """UPDATE login SET username = %s, password = %s WHERE username = %s""", (login, hashed_password, id))
         conn.commit()
         # flash('Teacher Updated Successfully')
         return redirect(url_for('info_teacher'))
