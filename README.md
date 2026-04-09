@@ -85,6 +85,10 @@ The database includes the following main entities:
 * One-to-many relationships (e.g. student → grades)
 * Conditional relationships (e.g. class teacher)
 
+### 🗺️ ER Diagram
+
+![ER Diagram](database/er_diagram.png)
+
 The database structure is defined in:
 
 ```bash
@@ -274,6 +278,7 @@ Course: *Database Organization*
 **Vladyslav Lavrov**
 
 * GitHub: https://github.com/chessmaster987
+* LinkedIn: https://www.linkedin.com/in/vlad-lavrov
 
 ---
 
