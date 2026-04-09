@@ -90,7 +90,7 @@ The database includes the following main entities:
 
 ### 🗺️ ER Diagram (Crow's Foot notation)
 
-![ER Diagram](database/er_diagram.PNG)
+![ER Diagram](database/er_diagram.jpg)
 
 *ER Diagram illustrating the database structure using Crow's Foot notation.  
 It shows all main entities (students, teachers, classes, subjects, schedules, etc.) and their relationships, including one-to-many and conditional associations.  
