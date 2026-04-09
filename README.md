@@ -22,9 +22,12 @@ The goal of this project is to design and implement an information system that:
 
 ---
 
-## 👥 User Roles
+## 🧑‍🤝‍🧑 User Roles
 
 The system supports 3 types of users:
+<img src="https://img.shields.io/badge/Administrator-👨‍💼-blue" style="vertical-align: middle; height: 25px;">
+<img src="https://img.shields.io/badge/Teacher-👨‍🏫-green" style="vertical-align: middle; height: 25px;">
+<img src="https://img.shields.io/badge/Student-👨‍🎓-orange" style="vertical-align: middle; height: 25px;">
 
 ### 👨‍💼 Administrator
 
