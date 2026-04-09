@@ -92,6 +92,10 @@ The database includes the following main entities:
 
 ![ER Diagram](database/er_diagram.PNG)
 
+*ER Diagram illustrating the database structure using Crow's Foot notation.  
+It shows all main entities (students, teachers, classes, subjects, schedules, etc.) and their relationships, including one-to-many and conditional associations.  
+This diagram helps understand the overall database design and how data flows between different tables in the system.*
+
 The database structure is defined in:
 
 ```bash
