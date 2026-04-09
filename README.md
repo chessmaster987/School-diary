@@ -1,5 +1,11 @@
 # 📘 School Diary – Information System
 
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![Flask](https://img.shields.io/badge/Flask-Web%20Framework-black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+![Status](https://img.shields.io/badge/status-academic%20project-green)
+![License](https://img.shields.io/badge/license-educational-lightgrey)
+
 Web-based information system for managing school processes: students, teachers, classes, schedules, homework, and grades.
 
 This project was developed as a **course project in "Database Organization"**.
@@ -224,11 +230,12 @@ The system implements:
 
 ## 🧪 Testing
 
-Manual testing:
+Manual testing approach:
 
-1. Run the application
-2. Log in as different roles
-3. Verify access control and functionality
+1. Verify login & roles
+2. Check CRUD operations
+3. Validate database interactions
+4. Test edge cases
 
 ---
 
