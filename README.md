@@ -85,7 +85,7 @@ The database includes the following main entities:
 * One-to-many relationships (e.g. student → grades)
 * Conditional relationships (e.g. class teacher)
 
-### 🗺️ ER Diagram
+### 🗺️ ER Diagram (Crow's Foot notation)
 
 ![ER Diagram](database/er_diagram.png)
 
