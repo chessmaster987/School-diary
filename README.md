@@ -87,7 +87,7 @@ The database includes the following main entities:
 
 ### 🗺️ ER Diagram (Crow's Foot notation)
 
-![ER Diagram](database/er_diagram.png)
+![ER Diagram](database/er_diagram.PNG)
 
 The database structure is defined in:
 
